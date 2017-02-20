@@ -1,0 +1,7 @@
+$VersionControl = 'git'
+$Package = 'none'
+$Build = 'go'
+$Document = 'none'
+$Test = 'go'
+$Deploy = 'none'
+$Run = 'none'
