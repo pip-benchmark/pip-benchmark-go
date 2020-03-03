@@ -34,7 +34,7 @@ func (c *TRandomInteger) NextInteger(min int64, max int64) int64 {
 		return min
 	}
 
-	return (int)(math.Floor((float64)(min) + rand.Float64()*(float64)(max-min)))
+	return (int64)(math.Floor((float64)(min) + rand.Float64()*(float64)(max-min)))
 }
 
 // Updates (drifts) a integer value within specified range defined
@@ -44,7 +44,7 @@ func (c *TRandomInteger) NextInteger(min int64, max int64) int64 {
 func (c *TRandomInteger) UpdateInteger(value int64, rng int64) int64 {
 
 	if rng == 0 {
-		rng = int(math.Floor(0.1 * (float64)(value)))
+		rng = int64(math.Floor(0.1 * (float64)(value)))
 	}
 	minValue := value - rng
 	maxValue := value + rng
