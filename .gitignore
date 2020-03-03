@@ -1,0 +1,9 @@
+/node_modules
+/npm-debug.log
+/.idea
+*.map
+/obj/test/**/*
+/data/test_write.properties
+/DiskBenchmark-*.dat
+/BenchmarkReport.txt
+/BenchmarkEnvironment.properties
