@@ -1,18 +1,34 @@
-let os = require('os');
+package environment
 
-export class SystemInfo {
+import (
+	"os"
+	"os/user"
+	"runtime"
+)
 
-    public constructor() {
-        this.put("Machine Name", os.hostname());
-        this.put("User Name", os.userInfo().username);
-        this.put("Operating System Name", os.type());
-        this.put("Operating System Version", os.release());
-        this.put("Operating System Architecture", os.arch());
-        this.put("Node.js Name", (<any>process).release.name);
-        this.put("Node.js Version", process.version);
-    }
+type SystemInfo struct {
+	parameters map[string]string
+}
 
-    private put(parameter: string, value: string): void {
-        this[parameter] = value;
-    }
+func NewSystemInfo() *SystemInfo {
+	c := SystemInfo{}
+	c.parameters = make(map[string]string)
+	host, err := os.Hostname()
+	if err == nil {
+		c.put("Machine Name", host)
+	}
+	user, err := user.Current()
+	if err == nil {
+		c.put("User Name", user.Username)
+	}
+	c.put("Operating System Name", runtime.GOOS)
+	//c.put("Operating System Version", os.);
+	c.put("Operating System Architecture", runtime.GOARCH)
+	//c.put("Golang Name", (<any>process).release.name);
+	c.put("Golang Version", runtime.Version())
+	return &c
+}
+
+func (c *SystemInfo) put(parameter string, value string) {
+	c.parameters[parameter] = value
 }

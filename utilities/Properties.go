@@ -1,127 +1,165 @@
-let fs = require('fs');
-let os = require('os');
+package utilities
 
-import { PropertyFileLine } from './PropertyFileLine';
-import { Converter } from './Converter';
+import (
+	"fmt"
+	"io/ioutil"
+	"regexp"
+)
 
-export class Properties {
-    public lines: PropertyFileLine[] = [];
+type Properties struct {
+	Lines      []*PropertyFileLine
+	properties map[string]string
+}
 
-    public loadFromFile(file: string): void {
-        let content: string = fs.readFileSync(file, { encoding: 'UTF-8' }).toString();
-        let lines = content.split(/[\r\n]+/g);
+func (c *Properties) LoadFromFile(file string) {
 
-        for (let index = 0; index < lines.length; index++) {
-            let line = new PropertyFileLine(lines[index]);
-            this.lines.push(line);
-        }
+	content, rdErr := ioutil.ReadFile(file)
 
-        this.populateItems();
-    }
+	if rdErr != nil {
+		panic("Can't read config file:" + file)
+	}
 
-    private populateItems(): void {
-        for (let prop in this) {
-            if (this.hasOwnProperty && prop != 'lines')
-                delete this[prop];
-        }
+	exp := regexp.MustCompile("/[\r\n]+/g")
+	lines := exp.Split(string(content), -1)
 
-        for (let line of this.lines) {
-            if (line.key != null && line.key.length > 0)
-                this[line.key] = line.value;
-        }
-    }
+	if c.Lines == nil {
+		c.Lines = make([]*PropertyFileLine, 0)
+	}
 
-    public saveToFile(file: string): void {
-        this.synchronizeItems();
+	for index := 0; index < len(lines); index++ {
+		line := NewPropertyFileLine(lines[index], "", "")
+		c.Lines = append(c.Lines, line)
+	}
 
-        let content = '';
-        for (let line of this.lines) {
-            content += line.line + os.EOL;
-        }
+	if c.properties == nil {
+		c.properties = make(map[string]string, 0)
+	}
 
-        fs.writeFileSync(file, content, { encoding: 'UTF-8' });
-    }
+	c.populateItems()
+}
 
-    private findLine(key: string): PropertyFileLine {
-        for (let line of this.lines) {
-            if (key == line.key)
-                return line;
-        }
-        return null;
-    }
+func (c *Properties) populateItems() {
+	for prop, _ := range c.properties {
 
-    private synchronizeItems(): void {
-        // Update existing values and create missing lines
-        for (let prop in this) {
-            if (!this.hasOwnProperty(prop)) continue;
-            if (prop == 'lines') continue;
+		if _, ok := c.properties[prop]; ok && prop != "lines" {
+			delete(c.properties, prop)
+		}
+	}
 
-            let line = this.findLine(prop);
-            if (line != null) {
-                line.value = '' + this[prop];
-            } else {
-                line = new PropertyFileLine(prop, '' + this[prop], null);
-                this.lines.push(line);
-            }
-        }
+	for _, line := range c.Lines {
+		if line.key != "" && len(line.key) > 0 {
+			c.properties[line.key] = line.value
+		}
+	}
+}
 
-        // Remove lines mismatched with listed keys
-        for (let index = this.lines.length - 1; index >= 0; index--) {
-            let line = this.lines[index];
-            if (line.key != null && !this.hasOwnProperty(line.key)) {
-                this.lines = this.lines.splice(index, 1);
-            }
-        }
-    }
+func (c *Properties) SaveToFile(file string) {
+	c.synchronizeItems()
 
-    public getAsString(key: string, defaultValue: string): string {
-        let value = this[key];
-        if (value == null) return defaultValue;
-        return value.toString();
-    }
+	content := ""
+	for _, line := range c.Lines {
+		content += fmt.Sprintln(line)
+	}
+	ioutil.WriteFile(file, []byte(content), 0755)
+}
 
-    public setAsString(key: string, value: string): void {
-        this[key] = value;
-    }
+func (c *Properties) findLine(key string) *PropertyFileLine {
+	for _, line := range c.Lines {
+		if key == line.key {
+			return line
+		}
+	}
+	return nil
+}
 
-    public getAsInteger(key: string, defaultValue: number): number {
-        let value = this[key];
-        if (value == null) return defaultValue;
-        return Converter.stringToInteger(value, defaultValue);
-    }
+func (c *Properties) synchronizeItems() {
+	// Update existing values and create missing lines
+	for prop := range c.properties {
+		//if (!c.hasOwnProperty(prop)) continue;
 
-    public setAsInteger(key: string, value: number): void {
-        this[key] = Converter.integerToString(value);
-    }
+		if prop == "lines" {
+			continue
+		}
 
-    public getAsLong(key: string, defaultValue: number): number {
-        let value = this[key];
-        if (value == null) return defaultValue;
-        return Converter.stringToLong(value, defaultValue);
-    }
+		line := c.findLine(prop)
+		if line != nil {
+			line.value = "" + c.properties[prop]
+		} else {
+			line = NewPropertyFileLine(prop, ""+c.properties[prop], "")
+			c.Lines = append(c.Lines, line)
+		}
+	}
 
-    public setAsLong(key: string, value: number): void {
-        this[key] = Converter.longToString(value);
-    }
+	// Remove lines mismatched with listed keys
+	for index := len(c.Lines) - 1; index >= 0; index-- {
+		line := c.Lines[index]
+		if _, ok := c.properties[line.key]; line.key != "" && !ok {
 
-    public getAsDouble(key: string, defaultValue: number): number {
-        let value = this[key];
-        if (value == null) return defaultValue;
-        return Converter.stringToDouble(value, defaultValue);
-    }
+			if index == len(c.Lines) {
+				c.Lines = c.Lines[:index-1]
+			} else {
+				c.Lines = append(c.Lines[:index], c.Lines[index+1:]...)
+			}
+		}
+	}
+}
 
-    public setAsDouble(key: string, value: number): void {
-        this[key] = Converter.doubleToString(value);
-    }
+func (c *Properties) GetAsString(key string, defaultValue string) string {
+	value := c.properties[key]
+	if value == "" {
+		return defaultValue
+	}
+	return value
+}
 
-    public getAsBoolean(key: string, defaultValue: boolean): boolean {
-        let value = this[key];
-        if (value == null) return defaultValue;
-        return Converter.stringToBoolean(value, defaultValue);
-    }
+func (c *Properties) SetAsString(key string, value string) {
+	c.properties[key] = value
+}
 
-    public setAsBoolean(key: string, value: boolean): void {
-        this[key] = Converter.booleanToString(value);
-    }
+func (c *Properties) GetAsInteger(key string, defaultValue int) int {
+	value := c.properties[key]
+	if value == "" {
+		return defaultValue
+	}
+	return Converter.StringToInteger(value, defaultValue)
+}
 
+func (c *Properties) SetAsInteger(key string, value int) {
+	c.properties[key] = Converter.IntegerToString(value)
+}
+
+func (c *Properties) GetAsLong(key string, defaultValue int32) int32 {
+	value := c.properties[key]
+	if value == "" {
+		return defaultValue
+	}
+	return Converter.StringToLong(value, defaultValue)
+}
+
+func (c *Properties) SetAsLong(key string, value int32) {
+	c.properties[key] = Converter.LongToString(value)
+}
+
+func (c *Properties) GetAsDouble(key string, defaultValue float64) float64 {
+	value := c.properties[key]
+	if value == "" {
+		return defaultValue
+	}
+	return Converter.StringToDouble(value, defaultValue)
+}
+
+func (c *Properties) SetAsDouble(key string, value float64) {
+	c.properties[key] = Converter.DoubleToString(value)
+}
+
+func (c *Properties) GetAsBoolean(key string, defaultValue bool) bool {
+	value := c.properties[key]
+	if value == "" {
+		return defaultValue
+	}
+	return Converter.StringToBoolean(value, defaultValue)
+}
+
+func (c *Properties) SetAsBoolean(key string, value bool) {
+	c.properties[key] = Converter.BooleanToString(value)
 }

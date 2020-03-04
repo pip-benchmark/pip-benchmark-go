@@ -1,1 +1,3 @@
-export type ConfigurationCallback = () => void;
+package config
+
+type ConfigurationCallback func()

@@ -1,125 +1,140 @@
-export class PropertyFileLine {
-    private _line: string;
-    private _key: string;
-    private _value: string;
-    private _comment: string;
+package utilities
 
-    public constructor(key: string, value?: string, comment?: string) {
-        if (value == null && comment == null) {
-            this.parseLine(key);
-        } else {
-            this._key = key;
-            this._value = value;
-            this._comment = comment;
-            this.composeNewLine();
-        }
-    }
+import (
+	"regexp"
+	"strings"
+)
 
-    public get key(): string {
-        return this._key;
-    }
+type PropertyFileLine struct {
+	line    string
+	key     string
+	value   string
+	comment string
+}
 
-    public get value(): string {
-        return this._value;
-    }
-        
-    public set value(value: string) {
-        this._value = value;
-        this.composeNewLine();
-    }
+func NewPropertyFileLine(key string, value string, comment string) *PropertyFileLine {
+	c := PropertyFileLine{}
+	if value == "" && comment == "" {
+		c.parseLine(key)
+	} else {
+		c.key = key
+		c.value = value
+		c.comment = comment
+		c.composeNewLine()
+	}
+	return &c
+}
 
-    public get comment(): string {
-        return this._comment; 
-    }
-    
-    public set comment(value: string) {
-        this._comment = value;
-        this.composeNewLine();
-    }
+func (c *PropertyFileLine) Key() string {
+	return c.key
+}
 
-    public get line(): string {
-        return this._line;
-    }
+func (c *PropertyFileLine) GetValue() string {
+	return c.value
+}
 
-    private composeNewLine(): void {
-        this._line = '';
-        if (this._key != null && this._key.length > 0) {
-            this._line += this.encodeValue(this._key);
-            this._line += '=';
-            this._line += this.encodeValue(this._value);
-        }
-        if (this._comment != null && this._comment.length > 0) {
-            this._line += " ;";
-            this._line += this._comment;
-        }
-    }
+func (c *PropertyFileLine) SetValue(value string) {
+	c.value = value
+	c.composeNewLine()
+}
 
-    private parseLine(line: string): void {
-        this._line = line;
+func (c *PropertyFileLine) GetComment() string {
+	return c.comment
+}
 
-        // Parse comment
-        let commentIndex = this.indexOfComment(line);
-        if (commentIndex >= 0) {
-            this._comment = line.substring(commentIndex + 1);
-            line = line.substring(0, commentIndex);
-        }
+func (c *PropertyFileLine) SetComment(value string) {
+	c.comment = value
+	c.composeNewLine()
+}
 
-        // Parse key and value
-        let assignmentIndex = line.indexOf('=');
-        if (assignmentIndex >= 0) {
-            this._value = line.substring(assignmentIndex + 1);
-            this._value = this.decodeValue(this._value);
-            this._key = line.substring(0, assignmentIndex);
-            this._key = this.decodeValue(this._key);
-        } else {
-            this._key = this.decodeValue(line);
-            this._value = "";
-        }
-    }
+func (c *PropertyFileLine) Line() string {
+	return c.line
+}
 
-    private indexOfComment(value: string): number {
-        let partOfString = false;
-        let stringDelimiter = ' ';
-        for (let index = 0; index < value.length; index++) {
-            let chr = value.charAt(index);
-            if (partOfString == false && chr == ';') {
-                return index;
-            } else if (partOfString == true && chr == stringDelimiter) {
-                partOfString = false;
-            } else if (partOfString == false && (chr == '\'' || chr == '\"')) {
-                partOfString = true;
-                stringDelimiter = chr;
-            }
-        }
-        return -1;
-    }
+func (c *PropertyFileLine) composeNewLine() {
+	c.line = ""
+	if c.key != "" && len(c.key) > 0 {
+		c.line += c.encodeValue(c.key)
+		c.line += "="
+		c.line += c.encodeValue(c.value)
+	}
+	if c.comment != "" && len(c.comment) > 0 {
+		c.line += " ;"
+		c.line += c.comment
+	}
+}
 
-    private decodeValue(value: string): string {
-        value = value.trim();
-        if (value.startsWith("'") && value.endsWith("'")) {
-            value = value.substring(1, value.length - 1);
-            value = value.replace(/\'\'/g, "'");
-        }
-        if (value.startsWith("\"") && value.endsWith("\"")) {
-            value = value.substring(1, value.length - 1);
-            value = value.replace(/\"\"/g, "\"");
-        }
-        return value;
-    }
+func (c *PropertyFileLine) parseLine(line string) {
+	c.line = line
 
-    private encodeValue(value: string): string {
-        if (value == null) {
-            return value;
-        }
+	// Parse comment
+	commentIndex := c.indexOfComment(line)
+	if commentIndex >= 0 {
+		c.comment = line[(commentIndex + 1):]
+		line = line[:commentIndex]
+	}
 
-        if (value.startsWith(" ") || value.endsWith(" ") || value.indexOf(';') >= 0) {
-            value = value.replace(/\"/g, "\"\"");
-            value = "\"" + value + "\"";
-        }
-        return value;
-    }
+	// Parse key and value
+	assignmentIndex := strings.Index(line, "=")
+	if assignmentIndex >= 0 {
+		c.value = line[(assignmentIndex + 1):]
+		c.value = c.decodeValue(c.value)
+		c.key = line[:assignmentIndex]
+		c.key = c.decodeValue(c.key)
+	} else {
+		c.key = c.decodeValue(line)
+		c.value = ""
+	}
+}
 
-    public toString(): string {
-        return this._line;
-    }
+func (c *PropertyFileLine) indexOfComment(value string) int {
+	partOfString := false
+	var stringDelimiter byte = ' '
+	for index := 0; index < len(value); index++ {
+		chr := value[index]
+		if partOfString == false && chr == ';' {
+			return index
+		} else if partOfString == true && chr == stringDelimiter {
+			partOfString = false
+		} else if partOfString == false && chr == '"' || chr == '\'' {
+			partOfString = true
+			stringDelimiter = chr
+		}
+	}
+	return -1
+}
+
+func (c *PropertyFileLine) decodeValue(value string) string {
+
+	value = strings.TrimSpace(value)
+	if strings.HasPrefix(value, "\"") && strings.HasSuffix(value, "\"") {
+		value = value[1 : len(value)-2]
+
+		exp := regexp.MustCompile("/\"\"/g")
+		value = exp.ReplaceAllString(value, "\"")
+	}
+	if strings.HasPrefix(value, "'") && strings.HasSuffix(value, "'") {
+		value = value[1 : len(value)-1]
+
+		exp := regexp.MustCompile("/''/g")
+		value = exp.ReplaceAllString(value, "'")
+	}
+	return value
+}
+
+func (c *PropertyFileLine) encodeValue(value string) string {
+	if value == "" {
+		return value
+	}
+
+	if strings.HasPrefix(value, " ") || strings.HasSuffix(value, " ") || strings.Index(value, ";") >= 0 {
+		exp := regexp.MustCompile("/\"/g")
+		value = exp.ReplaceAllString(value, "\"\"")
+		value = "\"" + value + "\""
+	}
+	return value
+}
+
+func (c *PropertyFileLine) ToString() string {
+	return c.line
 }

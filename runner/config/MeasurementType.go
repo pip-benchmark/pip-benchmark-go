@@ -1,4 +1,8 @@
-export enum MeasurementType {
-    Peak,
-    Nominal
-}
+package config
+
+type MeasurementType int
+
+const (
+	Peak MeasurementType = iota
+	Nominal
+)

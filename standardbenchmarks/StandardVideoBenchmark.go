@@ -1,7 +1,16 @@
-import { PassiveBenchmark } from '../PassiveBenchmark';
+package standartbenchmarks
 
-export class StandardVideoBenchmark extends PassiveBenchmark {
-    public constructor() {
-        super("Video", "Measures speed of drawing graphical primitives");
-    }
+import (
+	benchmark "github.com/pip-benchmark/pip-benchmark-go/benchmark"
+)
+
+type StandardVideoBenchmark struct {
+	*benchmark.PassiveBenchmark
+}
+
+func NewStandardVideoBenchmark() *StandardVideoBenchmark {
+	c := StandardVideoBenchmark{
+		PassiveBenchmark: benchmark.NewPassiveBenchmark("Video", "Measures speed of drawing graphical primitives"),
+	}
+	return &c
 }

@@ -1,12 +1,14 @@
-let async = require('async');
+package environment
 
-import { ConfigurationManager } from '../config/ConfigurationManager';
-import { ResultsManager } from '../results/ResultsManager';
-import { ExecutionManager } from '../execution/ExecutionManager';
-import { EnvironmentProperties } from './EnvironmentProperties';
-import { BenchmarkSuiteInstance } from '../benchmarks/BenchmarkSuiteInstance';
-import { StandardBenchmarkSuite } from './StandardBenchmarkSuite';
-import { SystemInfo } from './SystemInfo';
+// let async = require('async');
+
+// import { ConfigurationManager } from '../config/ConfigurationManager';
+// import { ResultsManager } from '../results/ResultsManager';
+// import { ExecutionManager } from '../execution/ExecutionManager';
+// import { EnvironmentProperties } from './EnvironmentProperties';
+// import { BenchmarkSuiteInstance } from '../benchmarks/BenchmarkSuiteInstance';
+// import { StandardBenchmarkSuite } from './StandardBenchmarkSuite';
+// import { SystemInfo } from './SystemInfo';
 
 export class EnvironmentManager extends ExecutionManager {
     private static readonly Duration = 5;

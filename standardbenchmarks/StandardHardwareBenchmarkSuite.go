@@ -1,35 +1,38 @@
-import { BenchmarkSuite } from '../BenchmarkSuite';
-import { StandardCpuBenchmark } from './StandardCpuBenchmark';
-import { StandardDiskBenchmark } from './StandardDiskBenchmark';
-import { StandardVideoBenchmark } from './StandardVideoBenchmark';
+package standartbenchmarks
 
-export class StandardHardwareBenchmarkSuite extends BenchmarkSuite {
-    private _cpuBenchmarkTest: StandardCpuBenchmark;
-    private _diskBenchmarkTest: StandardDiskBenchmark;
-    private _videoBenchmarkTest: StandardVideoBenchmark;
+import (
+	benchmark "github.com/pip-benchmark/pip-benchmark-go/benchmark"
+)
 
-    public constructor() {
-        super("StandardBenchmark", "Standard hardware benchmark");
+type StandardHardwareBenchmarkSuite struct {
+	*benchmark.BenchmarkSuite
+	cpuBenchmarkTest   *StandardCpuBenchmark
+	diskBenchmarkTest  *StandardDiskBenchmark
+	videoBenchmarkTest *StandardVideoBenchmark
+}
 
-        this._cpuBenchmarkTest = new StandardCpuBenchmark();
-        this.addBenchmark(this._cpuBenchmarkTest);
+func NewStandardHardwareBenchmarkSuite() *StandardHardwareBenchmarkSuite {
+	c := StandardHardwareBenchmarkSuite{}
+	c.BenchmarkSuite = benchmark.NewBenchmarkSuite("StandardBenchmark", "Standard hardware benchmark")
+	c.cpuBenchmarkTest = NewStandardCpuBenchmark()
+	c.AddBenchmark(c.cpuBenchmarkTest.Benchmark)
 
-        this._diskBenchmarkTest = new StandardDiskBenchmark();
-        this.addBenchmark(this._diskBenchmarkTest);
+	c.diskBenchmarkTest = NewStandardDiskBenchmark()
+	c.AddBenchmark(c.diskBenchmarkTest.Benchmark)
 
-        this._videoBenchmarkTest = new StandardVideoBenchmark();
-        this.addBenchmark(this._videoBenchmarkTest);
-    }
+	c.videoBenchmarkTest = NewStandardVideoBenchmark()
+	c.AddBenchmark(c.videoBenchmarkTest.Benchmark)
+	return &c
+}
 
-    public get cpuBenchmarkTest(): StandardCpuBenchmark {
-        return this._cpuBenchmarkTest;
-    }
+func (c *StandardHardwareBenchmarkSuite) CpuBenchmarkTest() *StandardCpuBenchmark {
+	return c.cpuBenchmarkTest
+}
 
-    public get diskBenchmarkTest(): StandardDiskBenchmark {
-        return this._diskBenchmarkTest;
-    }
+func (c *StandardHardwareBenchmarkSuite) DiskBenchmarkTest() *StandardDiskBenchmark {
+	return c.diskBenchmarkTest
+}
 
-    public get videoBenchmarkTest(): StandardVideoBenchmark {
-        return this._videoBenchmarkTest;
-    }
+func (c *StandardHardwareBenchmarkSuite) VideoBenchmarkTest() *StandardVideoBenchmark {
+	return c.videoBenchmarkTest
 }

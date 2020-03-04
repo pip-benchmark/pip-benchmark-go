@@ -1,89 +1,109 @@
-var fs = require('fs');
+package standartbenchmarks
 
-import { Benchmark } from '../Benchmark';
+import (
+	"math"
+	"math/rand"
+	"os"
+	"strconv"
 
-export class StandardDiskBenchmark extends Benchmark {
-    private static readonly NameText = "Disk";
-    private static readonly DescriptionText = "Measures disk read and write operations";
-    private static readonly BufferSize = 512;
-    private static readonly ChunkSize = 1024000;
-    private static readonly FileSize = 102400000;
+	i64 "github.com/adam-lavrik/go-imath/i64"
+	benchmark "github.com/pip-benchmark/pip-benchmark-go/benchmark"
+)
 
-    private _fileName: string;
-    private _fd: number;
-    private _fileSize: number = 0;
-    private _buffer = new Buffer(StandardDiskBenchmark.BufferSize);
+type StandardDiskBenchmark struct {
+	*benchmark.Benchmark
+	nameText        string
+	descriptionText string
+	bufferSize      int
+	chunkSize       int64
+	fileSizeMax     int64
 
-    public constructor() {
-        super(StandardDiskBenchmark.NameText, StandardDiskBenchmark.DescriptionText);
-    }
+	fileName string
+	fd       *os.File
+	fileSize int64
+	//buffer   *bytes.Buffer
+}
 
-    public setUp(callback: (err: any) => void): void {
-        let id = Math.ceil(1000000 + Math.random() * 9000000);
-        this._fileName = './DiskBenchmark-' + id + '.dat';
+func NewStandardDiskBenchmark() *StandardDiskBenchmark {
+	c := StandardDiskBenchmark{
+		nameText:        "Disk",
+		descriptionText: "Measures disk read and write operations",
+		bufferSize:      512,
+		chunkSize:       1024000,
+		fileSizeMax:     102400000,
+		fileSize:        0,
+	}
+	c.Benchmark.IExecutable = &c
+	return &c
+}
 
-        try {
-            this._fd = fs.openSync(this._fileName, 'w+');
-            callback(null);
-        } catch (ex) {
-            callback(ex);
-        }
-    }
+func (c *StandardDiskBenchmark) SetUp() error {
+	id := int64(math.Ceil(1000000.0 + rand.Float64()*9000000.0))
+	c.fileName = "./DiskBenchmark-" + strconv.FormatInt(id, 10) + ".dat"
 
-    public execute(callback: (err: any) => void): void {
-        if (this._fd == null) return;
+	file, opnErr := os.OpenFile(c.fileName, os.O_RDWR|os.O_CREATE, 0755)
+	if opnErr != nil {
+		return opnErr
+	}
+	c.fd = file
+	return nil
+}
 
-        try {
-            if (this._fileSize == 0 || Math.random() < 0.5) {
-                let position;
+func (c *StandardDiskBenchmark) Execute() error {
+	if c.fd == nil {
+		return nil
+	}
 
-                if (this._fileSize < StandardDiskBenchmark.FileSize) {
-                    position = this._fileSize;
-                } else {
-                    position = Math.ceil(Math.random() * (this._fileSize - StandardDiskBenchmark.ChunkSize));
-                }
+	if c.fileSize == 0 || rand.Float32() < 0.5 {
+		var position int64
 
-                let sizeToWrite = StandardDiskBenchmark.ChunkSize;
-                while (sizeToWrite > 0) {
-                    let length = Math.min(StandardDiskBenchmark.BufferSize, sizeToWrite);
-                    fs.writeSync(this._fd, this._buffer, 0, length, position);
+		if c.fileSize < c.fileSize {
+			position = c.fileSize
+		} else {
+			position = int64(math.Ceil(rand.Float64() * float64(c.fileSize-c.chunkSize)))
+		}
 
-                    position += length;
-                    this._fileSize = Math.max(this._fileSize, position);
-                    sizeToWrite -= length;
-                }
-            } else {
-                let position = Math.ceil(Math.random() * (this._fileSize - StandardDiskBenchmark.ChunkSize));
+		sizeToWrite := c.chunkSize
+		for sizeToWrite > 0 {
+			length := i64.Min((int64)(c.bufferSize), sizeToWrite)
 
-                let sizeToRead = StandardDiskBenchmark.ChunkSize;
-                while (sizeToRead > 0) {
-                    let length = Math.min(StandardDiskBenchmark.BufferSize, sizeToRead);
-                    fs.readSync(this._fd, this._buffer, 0, length, position);
+			buf := make([]byte, length)
+			_, wrErr := c.fd.WriteAt(buf, position)
 
-                    position += length;
-                    this._fileSize = Math.max(this._fileSize, position);
-                    sizeToRead -= length;
-                }
-            }
+			if wrErr != nil {
+				return wrErr
+			}
+			position += length
+			c.fileSize = i64.Max((int64)(c.fileSize), position)
+			sizeToWrite -= length
+		}
+	} else {
+		position := int64(math.Ceil(rand.Float64() * float64(c.fileSize-c.chunkSize)))
 
-            callback(null);
-        } catch (ex) {
-            callback(ex);
-        }
-    }
+		sizeToRead := c.chunkSize
+		for sizeToRead > 0 {
+			length := i64.Min(int64(c.bufferSize), sizeToRead)
 
-    public tearDown(callback: (err: any) => void): void {
-        try {
-            fs.closeSync(this._fd);
-            this._fd = null;
+			buf := make([]byte, length)
+			_, rdErr := c.fd.ReadAt(buf, position)
 
-            if (fs.existsSync(this._fileName)) {
-                fs.unlinkSync(this._fileName);
-            }
-        } catch (ex) {
-            // Ignore...
-        }
+			if rdErr != nil {
+				return rdErr
+			}
 
-        callback(null);
-    }
+			position += length
+			c.fileSize = i64.Max(int64(c.fileSize), position)
+			sizeToRead -= length
+		}
+	}
+	return nil
+}
+
+func (c *StandardDiskBenchmark) TearDown() error {
+
+	if c.fd != nil {
+		c.fd.Close()
+		c.fd = nil
+	}
+	return nil
 }

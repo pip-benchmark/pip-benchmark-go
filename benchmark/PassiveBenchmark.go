@@ -12,6 +12,7 @@ func NewPassiveBenchmark(name string, description string) *PassiveBenchmark {
 	c := PassiveBenchmark{
 		Benchmark: NewBenchmark(name, description),
 	}
+	c.Benchmark.IExecutable = &c
 	return &c
 }
 

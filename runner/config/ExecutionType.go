@@ -1,4 +1,8 @@
-export enum ExecutionType {
-    Proportional,
-    Sequential
-}
+package config
+
+type ExecutionType int
+
+const (
+	Proportional ExecutionType = iota
+	Sequential
+)

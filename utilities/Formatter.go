@@ -1,60 +1,56 @@
-let util = require('util');
+package utilities
 
-export class Formatter {
+import (
+	"fmt"
+	"strconv"
+	"time"
+)
 
-    public static padLeft(value: string, length: number, padSymbol: string): string {
-        let output = '';
-        output += padSymbol;
-        output += value;
-        output += padSymbol;
+var Formatter TFormatter = TFormatter{}
 
-        while (output.length < length + 2) {
-            output = padSymbol + output;
-        }
+type TFormatter struct {
+}
 
-        return output;
-    }
+func (c *TFormatter) PadLeft(value string, length int, padSymbol string) string {
+	output := ""
+	output += padSymbol
+	output += value
+	output += padSymbol
 
-    public static padRight(value: string, length: number, padSymbol: string): string {
-        let output = '';
-        output += padSymbol;
-        output += value;
-        output += padSymbol;
+	for len(output) < length+2 {
+		output = padSymbol + output
+	}
+	return output
+}
 
-        while (output.length < length + 2) {
-            output += padSymbol;
-        }
+func (c *TFormatter) PadRight(value string, length int, padSymbol string) string {
+	output := ""
+	output += padSymbol
+	output += value
+	output += padSymbol
 
-        return output;
-    }
+	for len(output) < length+2 {
+		output += padSymbol
+	}
+	return output
+}
 
-    public static formatNumber(value: number, decimals: number = 2): string {
-        value = value || 0;
-        return value.toFixed(decimals || 2);
-    }
+func (c *TFormatter) FormatNumber(value float64, decimals int) string {
+	return strconv.FormatFloat(value, 'e', decimals, 64)
+}
 
-    public static formatDate(date: Date): string {
-        date = date || new Date();
-        let value = date.toISOString();
-        let pos = value.indexOf('T');
-        return value.substring(0, pos);
-    }
+func (c *TFormatter) FormatDate(date time.Time) string {
+	return date.UTC().Format("2006-01-02")
+}
 
-    public static formatTime(date: Date) {
-        date = date || new Date();
-        let value = date.toISOString();
-        let pos = value.indexOf('T');
-        value = value.substring(pos + 1);
-        pos = value.indexOf('.');
-        return pos > 0 ? value.substring(0, pos) : value;
-    }
+func (c *TFormatter) FormatTime(date time.Time) string {
+	return date.UTC().Format("15:04:05")
+}
 
-    public static formatTimeSpan(ticks: number): string {
-        let millis = (ticks % 1000).toFixed(0);
-        let seconds = ((ticks / 1000) % 60).toFixed(0);
-        let minutes = ((ticks / 1000 / 60) % 60).toFixed(0);
-        let hours = (ticks / 1000 / 60 / 60).toFixed(0);
-        return util.format("%d:%d:%d.%d", hours, minutes, seconds, millis);
-    }
-
+func (c *TFormatter) FormatTimeSpan(ticks int64) string {
+	millis := (ticks % 1000)
+	seconds := ((ticks / 1000) % 60)
+	minutes := ((ticks / 1000 / 60) % 60)
+	hours := (ticks / 1000 / 60 / 60)
+	return fmt.Sprintf("%d:%d:%d.%d", hours, minutes, seconds, millis)
 }

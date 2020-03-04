@@ -1,44 +1,50 @@
-let path = require('path');
+package environment
 
-import { Properties } from '../../utilities/Properties';
+import (
+	"os"
 
-export class EnvironmentProperties extends Properties {
+	utilities "github.com/pip-benchmark/pip-benchmark-go/utilities"
+)
 
-    private getFilePath(): string {
-        return "BenchmarkEnvironment.properties";
-    }
+type EnvironmentProperties struct {
+	*utilities.Properties
+}
 
-    public get cpuBenchmark(): number {
-        return super.getAsDouble("CpuBenchmark", 0);
-    }
+func (c *EnvironmentProperties) getFilePath() string {
+	return "BenchmarkEnvironment.properties"
+}
 
-    public set cpuBenchmark(value: number) {
-        super.setAsDouble("CpuBenchmark", value);
-    }
+func (c *EnvironmentProperties) GetCpuBenchmark() float64 {
+	return c.Properties.GetAsDouble("CpuBenchmark", 0)
+}
 
-    public get diskBenchmark(): number {
-        return super.getAsDouble("DiskBenchmark", 0);
-    }
+func (c *EnvironmentProperties) SetCpuBenchmark(value float64) {
+	c.Properties.SetAsDouble("CpuBenchmark", value)
+}
 
-    public set diskBenchmark(value: number) {
-        super.setAsDouble("DiskBenchmark", value);
-    }
+func (c *EnvironmentProperties) GetDiskBenchmark() float64 {
+	return c.Properties.GetAsDouble("DiskBenchmark", 0)
+}
 
-    public get videoBenchmark(): number {
-        return super.getAsDouble("VideoBenchmark", 0);
-    }
+func (c *EnvironmentProperties) SetDiskBenchmark(value float64) {
+	c.Properties.SetAsDouble("DiskBenchmark", value)
+}
 
-    public set videoBenchmark(value: number) {
-        super.setAsDouble("VideoBenchmark", value);
-    }
+func (c *EnvironmentProperties) GetVideoBenchmark() float64 {
+	return c.Properties.GetAsDouble("VideoBenchmark", 0)
+}
 
-    public load(): void {
-        if (path.existSync(this.getFilePath())) {
-            this.loadFromFile(this.getFilePath());
-        }
-    }
+func (c *EnvironmentProperties) SetVideoBenchmark(value float64) {
+	c.Properties.SetAsDouble("VideoBenchmark", value)
+}
 
-    public save(): void {
-        this.saveToFile(this.getFilePath());
-    }
+func (c *EnvironmentProperties) load() {
+	_, fileErr := os.Stat(c.getFilePath())
+	if os.IsExist(fileErr) {
+		c.Properties.LoadFromFile(c.getFilePath())
+	}
+}
+
+func (c *EnvironmentProperties) Save() {
+	c.Properties.SaveToFile(c.getFilePath())
 }

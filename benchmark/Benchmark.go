@@ -1,10 +1,10 @@
 package benchmark
 
 type Benchmark struct {
-	IExecutionContext
+	IExecutable
 	name        string
 	description string
-	context     IExecutionContext
+	Context     IExecutionContext
 }
 
 func NewBenchmark(name string, description string) *Benchmark {
@@ -24,11 +24,11 @@ func (c *Benchmark) Description() string {
 }
 
 func (c *Benchmark) GetContext() IExecutionContext {
-	return c.context
+	return c.Context
 }
 
 func (c *Benchmark) SetContext(value IExecutionContext) {
-	c.context = value
+	c.Context = value
 }
 
 func (c *Benchmark) SetUp() error {

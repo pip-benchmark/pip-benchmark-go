@@ -1,81 +1,92 @@
-import { MeasurementType } from './MeasurementType';
-import { ExecutionType } from './ExecutionType';
-import { ConfigurationCallback } from './ConfigurationCallback';
+package config
 
-export class ConfigurationManager {
-    private _measurementType: MeasurementType = MeasurementType.Peak;
-    private _nominalRate: number = 1;
-    private _executionType: ExecutionType = ExecutionType.Proportional;
-    private _duration: number = 60;
-    private _forceContinue: boolean = false;
-    private _changeListeners: ConfigurationCallback[] = [];
-    
-    public constructor() {}
+type ConfigurationManager struct {
+	measurementType MeasurementType
+	nominalRate     int
+	executionType   ExecutionType
+	duration        int64
+	forceContinue   bool
+	changeListeners []*ConfigurationCallback
+}
 
-     public get measurementType(): MeasurementType {
-        return this._measurementType;
-    }
-    
-    public set measurementType(value: MeasurementType) {
-        this._measurementType = value; 
-        this.notifyChanged();
-    }
+func NewConfigurationManager() *ConfigurationManager {
+	c := ConfigurationManager{
+		measurementType: Peak,
+		nominalRate:     1,
+		executionType:   Proportional,
+		duration:        60,
+		forceContinue:   false,
+	}
+	c.changeListeners = make([]*ConfigurationCallback, 0)
+	return &c
+}
 
-    public get nominalRate() {
-        return this._nominalRate; 
-    }
-    
-    public set nominalRate(value: number) {
-        this._nominalRate = value;
-        this.notifyChanged();
-    }
+func (c *ConfigurationManager) GetMeasurementType() MeasurementType {
+	return c.measurementType
+}
 
-    public get executionType(): ExecutionType {
-        return this._executionType; 
-    }
-    
-    public set executionType(value: ExecutionType) {
-        this._executionType = value;
-        this.notifyChanged();
-    }
+func (c *ConfigurationManager) SetMeasurementType(value MeasurementType) {
+	c.measurementType = value
+	c.notifyChanged()
+}
 
-    public get duration(): number {
-        return this._duration; 
-    }
-    
-    public set duration(value: number) {
-        this._duration = value;
-        this.notifyChanged();
-    }
-    
-    public get forceContinue(): boolean {
-        return this._forceContinue;
-    }
-    
-    public set forceContinue(value: boolean) {
-        this._forceContinue = value;
-        this.notifyChanged();
-    }
+func (c *ConfigurationManager) GetNominalRate() int {
+	return c.nominalRate
+}
 
-    public addChangeListener(listener: ConfigurationCallback): void {
-        this._changeListeners.push(listener);
-    }
+func (c *ConfigurationManager) SetNominalRate(value int) {
+	c.nominalRate = value
+	c.notifyChanged()
+}
 
-    public removeChangeListener(listener: ConfigurationCallback): void {
-        for (let index = this._changeListeners.length - 1; index >= 0; index--) {
-            if (this._changeListeners[index] == listener)
-                this._changeListeners = this._changeListeners.splice(index, 1);
-        }
-    }
+func (c *ConfigurationManager) GetExecutionType() ExecutionType {
+	return c.executionType
+}
 
-    public notifyChanged(): void {
-        for (let index = 0; index < this._changeListeners.length; index++) {
-            try {
-                let listener = this._changeListeners[index];
-                listener();
-            } catch (ex) {
-                // Ignore and send a message to the next listener.
-            }
-        }
-    }
+func (c *ConfigurationManager) SetExecutionType(value ExecutionType) {
+	c.executionType = value
+	c.notifyChanged()
+}
+
+func (c *ConfigurationManager) GetDuration() int64 {
+	return c.duration
+}
+
+func (c *ConfigurationManager) SetDuration(value int64) {
+	c.duration = value
+	c.notifyChanged()
+}
+
+func (c *ConfigurationManager) GetForceContinue() bool {
+	return c.forceContinue
+}
+
+func (c *ConfigurationManager) SetForceContinue(value bool) {
+	c.forceContinue = value
+	c.notifyChanged()
+}
+
+func (c *ConfigurationManager) AddChangeListener(listener *ConfigurationCallback) {
+	c.changeListeners = append(c.changeListeners, listener)
+}
+
+func (c *ConfigurationManager) RemoveChangeListener(listener *ConfigurationCallback) {
+	for index := len(c.changeListeners) - 1; index >= 0; index-- {
+		if c.changeListeners[index] == listener {
+
+			if index == len(c.changeListeners) {
+				c.changeListeners = c.changeListeners[:index-1]
+			} else {
+				c.changeListeners = append(c.changeListeners[:index], c.changeListeners[index+1:]...)
+			}
+
+		}
+	}
+}
+
+func (c *ConfigurationManager) notifyChanged() {
+	for index := 0; index < len(c.changeListeners); index++ {
+		listener := c.changeListeners[index]
+		(*listener)()
+	}
 }

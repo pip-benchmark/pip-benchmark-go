@@ -15,6 +15,7 @@ func NewDelegatedBenchmark(name string, description string,
 		Benchmark:       NewBenchmark(name, description),
 		executeCallback: executeCallback,
 	}
+	c.Benchmark.IExecutable = &c
 	return &c
 }
 

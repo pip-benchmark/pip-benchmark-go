@@ -1,23 +1,34 @@
-import { BenchmarkSuite } from '../BenchmarkSuite';
+package standartbenchmarks
 
-export class UtilityBenchmarkSuite extends BenchmarkSuite {
+import (
+	"math/rand"
+	"time"
 
-    public constructor() {
-        super("Utility", "Set of utility benchmark tests");
+	benchmark "github.com/pip-benchmark/pip-benchmark-go/benchmark"
+)
 
-        this.createBenchmark("Empty", "Does nothing", this.executeEmpty);
-        this.createBenchmark("RandomDelay", "Introduces random delay to measuring thread", this.executeRandomDelay);
-    }
+type UtilityBenchmarkSuite struct {
+	*benchmark.BenchmarkSuite
+}
 
-    private executeEmpty(callback: (err: any) => void): void {
-        // This is an empty benchmark
-        callback(null);
-    }
+func NewUtilityBenchmarkSuite() *UtilityBenchmarkSuite {
 
-    private executeRandomDelay(callback: (err: any) => void): void {
-        setTimeout(
-            () => { callback(null); },
-            Math.random() * 1000
-        );
-    }
+	c := UtilityBenchmarkSuite{}
+	c.BenchmarkSuite = benchmark.NewBenchmarkSuite("Utility", "Set of utility benchmark tests")
+	c.CreateBenchmark("Empty", "Does nothing", c.ExecuteEmpty)
+	c.CreateBenchmark("RandomDelay", "Introduces random delay to measuring thread", c.executeRandomDelay)
+	return &c
+}
+
+func (c *UtilityBenchmarkSuite) ExecuteEmpty() error {
+	// This is an empty benchmark
+	return nil
+}
+
+func (c *UtilityBenchmarkSuite) executeRandomDelay() error {
+	select {
+	case <-time.After(time.Duration(rand.Intn(1000)) * time.Millisecond):
+	}
+
+	return nil
 }

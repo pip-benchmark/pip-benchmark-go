@@ -1,106 +1,103 @@
-import { IExecutionContext } from '../../IExecutionContext';
-import { Benchmark } from '../../Benchmark';
-import { PassiveBenchmark } from '../../PassiveBenchmark';
+package benchmarks
 
-export class BenchmarkInstance {
-    private _suite: any;
-    private _benchmark: Benchmark;
-    private _selected: boolean = false;
-    private _proportion: number = 100;
-    private _startRange: number;
-    private _endRange: number;
+import (
+	ix "github.com/adam-lavrik/go-imath/ix"
+	benchmark "github.com/pip-benchmark/pip-benchmark-go/benchmark"
+)
 
-    public constructor(suite: any, benchmark: Benchmark) {
-        this._suite = suite;
-        this._benchmark = benchmark;
-    }
+type BenchmarkInstance struct {
+	suite      *benchmark.BenchmarkSuite
+	benchmark  *benchmark.Benchmark
+	selected   bool
+	proportion int
+	startRange int
+	endRange   int
+}
 
-    public get suite(): any {
-        return this._suite;
-    }
+func NewBenchmarkInstance(suite *benchmark.BenchmarkSuite, benchmark *benchmark.Benchmark) *BenchmarkInstance {
+	c := BenchmarkInstance{}
+	c.suite = suite
+	c.benchmark = benchmark
+	c.selected = false
+	c.proportion = 100
+	return &c
+}
 
-    public get benchmark(): Benchmark {
-        return this._benchmark;
-    }
-    
-    public get name(): string {
-        return this._benchmark.name;
-    }
+func (c *BenchmarkInstance) Suite() *benchmark.BenchmarkSuite {
+	return c.suite
+}
 
-    public get fullName(): string {
-        return '' + this._suite.name + '.' + this.name;
-    }
+func (c *BenchmarkInstance) Benchmark() *benchmark.Benchmark {
+	return c.benchmark
+}
 
-    public get description(): string {
-        return this._benchmark.description;
-    }
+func (c *BenchmarkInstance) Name() string {
+	return c.benchmark.Name()
+}
 
-    public get isSelected(): boolean {
-        return this._selected;
-    }
-    
-    public set isSelected(value: boolean) {
-        this._selected = value;
-    }
+func (c *BenchmarkInstance) FullName() string {
+	return "" + c.suite.Name() + "." + c.Name()
+}
 
-    public get isPassive(): boolean {
-        return this._benchmark instanceof PassiveBenchmark;
-    }
+func (c *BenchmarkInstance) Description() string {
+	return c.benchmark.Description()
+}
 
-    public get proportion(): number {
-        return this._proportion;
-    }
-    
-    public set proportion(value: number) {
-        this._proportion = Math.max(0, Math.min(10000, value));
-    }
+func (c *BenchmarkInstance) IsSelected() bool {
+	return c.selected
+}
 
-    public get startRange(): number {
-        return this._startRange;
-    }
-    
-    public set startRange(value: number) {
-        this._startRange = value;
-    }
-    
-    public get endRange(): number {
-        return this._endRange;
-    }
-    
-    public set endRange(value: number) {
-        this._endRange = value;
-    }
+func (c *BenchmarkInstance) Select(value bool) {
+	c.selected = value
+}
 
-    public withinRange(proportion: number): boolean {
-    	return proportion >= this._startRange 
-            && proportion < this._endRange;
-    }
-    
-    public setUp(context: IExecutionContext, callback: (err: any) => void): void {
-        this._benchmark.context = context;
-        
-        try {
-            this._benchmark.setUp(callback);
-        } catch (ex) {
-            callback(ex);
-        }
-    }
-    
-    public execute(callback: (err: any) => void): void {
-        try {
-            this._benchmark.execute(callback);
-        } catch (ex) {
-            callback(ex);
-        }
-    }
-    
-    public tearDown(callback: (err: any) => void): void {
-        try {
-            this._benchmark.tearDown(callback);
-        } catch (ex) {
-            callback(ex);
-        }
+// func (c *BenchmarkInstance) IsPassive() bool {
+// 	//TODO: Need fix type resolving!!!
+// 	//return c.benchmark instanceof PassiveBenchmark;
+// 	return true
+// }
 
-        this._benchmark.context = null;
-    }
+func (c *BenchmarkInstance) GetProportion() int {
+	return c.proportion
+}
+
+func (c *BenchmarkInstance) SetProportion(value int) {
+	c.proportion = ix.Max(0, ix.Min(10000, value))
+}
+
+func (c *BenchmarkInstance) GetStartRange() int {
+	return c.startRange
+}
+
+func (c *BenchmarkInstance) SetStartRange(value int) {
+	c.startRange = value
+}
+
+func (c *BenchmarkInstance) GetendRange() int {
+	return c.endRange
+}
+
+func (c *BenchmarkInstance) SetEndRange(value int) {
+	c.endRange = value
+}
+
+func (c *BenchmarkInstance) WithinRange(proportion int) bool {
+	return proportion >= c.startRange && proportion < c.endRange
+}
+
+func (c *BenchmarkInstance) SetUp(context benchmark.IExecutionContext) error {
+	c.benchmark.SetContext(context)
+	return c.benchmark.SetUp()
+}
+
+func (c *BenchmarkInstance) Execute() error {
+
+	return c.benchmark.Execute()
+
+}
+
+func (c *BenchmarkInstance) TearDown() error {
+	err := c.benchmark.TearDown()
+	c.benchmark.SetContext(nil)
+	return err
 }

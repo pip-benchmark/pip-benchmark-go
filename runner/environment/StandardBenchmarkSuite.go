@@ -1,40 +1,43 @@
-import { BenchmarkSuite } from '../../BenchmarkSuite';
-import { DefaultCpuBenchmark } from './DefaultCpuBenchmark';
-import { DefaultDiskBenchmark } from './DefaultDiskBenchmark';
-import { DefaultVideoBenchmark } from './DefaultVideoBenchmark';
+package environment
 
-export class StandardBenchmarkSuite extends BenchmarkSuite {
-    private _cpuBenchmark: DefaultCpuBenchmark;
-    private _diskBenchmark: DefaultDiskBenchmark;
-    private _videoBenchmark: DefaultVideoBenchmark;
+import (
+	benchmark "github.com/pip-benchmark/pip-benchmark-go/benchmark"
+)
 
-    public constructor() {
-        super("StandardBenchmark", "Measures overall system performance");
-        
-        this._cpuBenchmark = new DefaultCpuBenchmark();
-        this.addBenchmark(this._cpuBenchmark);
+type StandardBenchmarkSuite struct {
+	*benchmark.BenchmarkSuite
+	cpuBenchmark   *DefaultCpuBenchmark
+	diskBenchmark  *DefaultDiskBenchmark
+	videoBenchmark *DefaultVideoBenchmark
+}
 
-        this._diskBenchmark = new DefaultDiskBenchmark();
-        this.addBenchmark(this._diskBenchmark);
+func NewStandardBenchmarkSuite() *StandardBenchmarkSuite {
+	c := StandardBenchmarkSuite{}
+	c.BenchmarkSuite = benchmark.NewBenchmarkSuite("StandardBenchmark", "Measures overall system performance")
+	c.cpuBenchmark = NewDefaultCpuBenchmark()
+	c.AddBenchmark(c.cpuBenchmark.Benchmark)
 
-        this._videoBenchmark = new DefaultVideoBenchmark();
-        this.addBenchmark(this._videoBenchmark);
+	c.diskBenchmark = NewDefaultDiskBenchmark()
+	c.AddBenchmark(c.diskBenchmark.Benchmark)
 
-        this.createParameter("FilePath", "Path where test file is located on disk", "");
-        this.createParameter("FileSize", "Size of the test file", "102400000");
-        this.createParameter("ChunkSize", "Size of a chunk that read or writter from/to test file", "1024000");
-        this.createParameter("OperationTypes", "Types of test operations: read, write or all", "all");
-    }
+	c.videoBenchmark = NewDefaultVideoBenchmark()
+	c.AddBenchmark(c.videoBenchmark.Benchmark)
 
-    public get cpuBenchmark(): DefaultCpuBenchmark {
-        return this._cpuBenchmark;
-    }
+	c.CreateParameter("FilePath", "Path where test file is located on disk", "")
+	c.CreateParameter("FileSize", "Size of the test file", "102400000")
+	c.CreateParameter("ChunkSize", "Size of a chunk that read or writter from/to test file", "1024000")
+	c.CreateParameter("OperationTypes", "Types of test operations: read, write or all", "all")
+	return &c
+}
 
-    public get diskBenchmark(): DefaultDiskBenchmark {
-        return this._diskBenchmark;
-    }
+func (c *StandardBenchmarkSuite) GetCpuBenchmark() *DefaultCpuBenchmark {
+	return c.cpuBenchmark
+}
 
-    public get videoBenchmark(): DefaultVideoBenchmark {
-        return this._videoBenchmark;
-    }
+func (c *StandardBenchmarkSuite) GetDiskBenchmark() *DefaultDiskBenchmark {
+	return c.diskBenchmark
+}
+
+func (c *StandardBenchmarkSuite) GetVideoBenchmark() *DefaultVideoBenchmark {
+	return c.videoBenchmark
 }
