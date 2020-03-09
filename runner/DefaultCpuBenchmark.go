@@ -1,4 +1,4 @@
-package standardbenchmarks
+package runner
 
 import (
 	"math"
@@ -6,23 +6,22 @@ import (
 	benchmark "github.com/pip-benchmark/pip-benchmark-go/benchmark"
 )
 
-type StandardCpuBenchmark struct {
+type DefaultCpuBenchmark struct {
 	*benchmark.Benchmark
 	numberOfAttempts int
 }
 
-func NewStandardCpuBenchmark() *StandardCpuBenchmark {
-	c := StandardCpuBenchmark{
-		Benchmark:        benchmark.NewBenchmark("CPU", "Measures CPU speed by running arythmetical operations", "StandardCpuBenchmark"),
-		numberOfAttempts: 20000,
-	}
+func NewDefaultCpuBenchmark() *DefaultCpuBenchmark {
+	c := DefaultCpuBenchmark{}
+	c.Benchmark = benchmark.NewBenchmark("CPU", "Measures CPU performance", "DefaultCpuBenchmark")
 	c.Benchmark.IExecutable = &c
+	c.numberOfAttempts = 20000
 	return &c
 }
 
-func (c *StandardCpuBenchmark) Execute() error {
+func (c *DefaultCpuBenchmark) Execute() error {
 	// Count increment, comparison and goto for 1 arithmetic operation
-	for value := float64(0.0); value < float64(c.numberOfAttempts); value += 1.0 {
+	for value := float64(0); value < float64(c.numberOfAttempts); value++ {
 		// #1
 		result1 := value + value
 		result2 := result1 - value
@@ -93,6 +92,5 @@ func (c *StandardCpuBenchmark) Execute() error {
 		result4 = result2 / result3
 		math.Log(result4)
 	}
-
 	return nil
 }

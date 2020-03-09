@@ -44,7 +44,7 @@ func (c *BenchmarkSuite) AddParameter(parameter Parameter) Parameter {
 }
 
 func (c *BenchmarkSuite) CreateParameter(name string, description string, defaultValue string) *Parameter {
-	parameter := NewParameter(name, description, defaultValue)
+	parameter := NewParameter(name, description, defaultValue, "")
 	c.parameters[name] = parameter
 	return parameter
 }

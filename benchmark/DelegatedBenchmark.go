@@ -12,7 +12,7 @@ func NewDelegatedBenchmark(name string, description string,
 		panic("DelegatedBenchmark: ExecuteCallback can't be nil")
 	}
 	c := DelegatedBenchmark{
-		Benchmark:       NewBenchmark(name, description),
+		Benchmark:       NewBenchmark(name, description, "DelegatedBenchmark"),
 		executeCallback: executeCallback,
 	}
 	c.Benchmark.IExecutable = &c

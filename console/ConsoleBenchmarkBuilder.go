@@ -1,59 +1,71 @@
 package console
 
-// const _ = require('lodash');
+import (
+	benchrunner "github.com/pip-benchmark/pip-benchmark-go/runner"
+)
 
-// import { BenchmarkBuilder } from '../runner/BenchmarkBuilder';
-// import { BenchmarkRunner } from '../runner/BenchmarkRunner';
-// import { ConsoleEventPrinter } from './ConsoleEventPrinter';
-// import { CommandLineArgs } from './CommandLineArgs';
+type ConsoleBenchmarkBuilder struct {
+	*benchrunner.BenchmarkBuilder
+}
 
-// export class ConsoleBenchmarkBuilder extends BenchmarkBuilder {
+func NewConsoleBenchmarkBuilder() *ConsoleBenchmarkBuilder {
+	c := ConsoleBenchmarkBuilder{
+		BenchmarkBuilder: benchrunner.NewBenchmarkBuilder(),
+	}
+	return &c
+}
 
-//     public configureWithArgs(args: any): BenchmarkBuilder {
-//         let _args: CommandLineArgs;
+func (c *ConsoleBenchmarkBuilder) configureWithArgs(args interface{}) *benchrunner.BenchmarkBuilder {
+	var _args *CommandLineArgs
 
-//         if (args instanceof CommandLineArgs) {
-//             _args = <CommandLineArgs>args;
-//         } else {
-//             _args = new CommandLineArgs(args);
-//         }
+	if _, ok := args.(*CommandLineArgs); ok {
+		_args = args.(*CommandLineArgs)
+	} else {
+		localArgs, ok := args.([]string)
+		if !ok {
+			panic("ConsoleBenchmarkBuilder: Error: Can't configure with args")
+		}
+		_args = NewCommandLineArgs(localArgs)
+	}
 
-//         // Load modules
-//         for (let module of _args.modules) {
-//             this._runner.benchmarks.addSuitesFromModule(module);
-//         }
+	// Load modules
+	for _, module := range _args.Modules {
+		c.Runner.Benchmarks().AddSuitesFromModule(module)
+	}
 
-//         // Load test suites classes
-//         for (let clazz of _args.classes) {
-//             this._runner.benchmarks.addSuiteFromClass(clazz);
-//         }
+	// Load test suites classes
+	for _, class := range _args.Classes {
+		c.Runner.Benchmarks().AddSuiteFromClass(class)
+	}
 
-//             // Load configuration
-//         if (_args.configurationFile != null)
-//             this._runner.parameters.loadFromFile(_args.configurationFile);
+	// Load configuration
+	if _args.ConfigurationFile != "" {
+		c.Runner.Parameters().LoadFromFile(_args.ConfigurationFile)
+	}
 
-//         // Set parameters
-//         if (!_.isEmpty(_args.parameters))
-//             this._runner.parameters.set(_args.parameters);
+	// Set parameters
+	if len(_args.Parameters) != 0 {
+		c.Runner.Parameters().Set(_args.Parameters)
+	}
 
-//         // Select benchmarks
-//         if (_args.benchmarks.length == 0)
-//             this._runner.benchmarks.selectAll();
-//         else
-//             this._runner.benchmarks.selectByName(_args.benchmarks);
+	// Select benchmarks
+	if len(_args.Benchmarks) == 0 {
+		c.Runner.Benchmarks().SelectAll()
+	} else {
+		c.Runner.Benchmarks().SelectByName(_args.Benchmarks)
+	}
 
-//         // Configure benchmarking
-//         this._runner.configuration.measurementType = _args.measurementType;
-//         this._runner.configuration.nominalRate = _args.nominalRate;
-//         this._runner.configuration.executionType = _args.executionType;
-//         this._runner.configuration.duration = _args.duration;
+	// Configure benchmarking
+	c.Runner.Configuration().SetMeasurementType(_args.MeasurementType)
+	c.Runner.Configuration().SetNominalRate(_args.NominalRate)
+	c.Runner.Configuration().SetExecutionType(_args.ExecutionType)
+	c.Runner.Configuration().SetDuration(_args.Duration)
 
-//         return this;
-//     }
+	return c.BenchmarkBuilder
+}
 
-//     public create(): BenchmarkRunner {
-//         let _runner = super.create();
-//         ConsoleEventPrinter.attach(_runner);
-//         return _runner;
-//     }
-// }
+func (c *ConsoleBenchmarkBuilder) Create() *benchrunner.BenchmarkRunner {
+	Runner := c.BenchmarkBuilder.Create()
+	ConsoleEventPrinter.Attach(Runner)
+	return Runner
+}

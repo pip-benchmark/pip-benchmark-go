@@ -1,78 +1,117 @@
 package console
 
-// import { MeasurementType } from '../runner/config/MeasurementType';
-// import { ExecutionType } from '../runner/config/ExecutionType';
-// import { Converter } from '../utilities/Converter';
+import (
+	"strings"
 
-// type CommandLineArgs struct{
-// }
-//     public constructor(args: string[]) {
-//         this.processArguments(args);
-//     }
+	benchrunner "github.com/pip-benchmark/pip-benchmark-go/runner"
+	util "github.com/pip-benchmark/pip-benchmark-go/utilities"
+)
 
-//     private processArguments(args: string[]): void {
-//         for (let index = 2; index < args.length; index++) {
-//             let arg = args[index];
-//             let moreArgs = index < args.length - 1;
+type CommandLineArgs struct {
+	Modules            []string
+	Classes            []string
+	Benchmarks         []string
+	Parameters         map[string]string
+	ConfigurationFile  string
+	ReportFile         string
+	Duration           int64
+	ShowHelp           bool
+	ShowBenchmarks     bool
+	ShowParameters     bool
+	ShowReport         bool
+	MeasureEnvironment bool
+	MeasurementType    benchrunner.MeasurementType
+	ExecutionType      benchrunner.ExecutionType
+	NominalRate        float64
+}
 
-//             if ((arg == "-a" || arg == "-j" || arg == "--module") && moreArgs) {
-//                 let module = args[++index];
-//                 this.modules.push(module);
-//             } else if ((arg == "-l" || arg == "--class") && moreArgs) {
-//                 let clazz = args[++index];
-//                 this.classes.push(clazz);
-//             } else if ((arg == "-b" || arg == "--benchmark") && moreArgs) {
-//                 let benchmark = args[++index];
-//                 this.benchmarks.push(benchmark);
-//             } else if ((arg == "-p" || arg == "--param") && moreArgs) {
-//                 let param = args[++index];
-//                 let pos = param.indexOf('=');
-//                 let key = pos > 0 ? param.substring(0, pos - 1) : param;
-//                 let value = pos > 0 ? param.substring(pos + 1) : null;
-//                 this.parameters.put(key, value);
-//             } else if ((arg == "-c" || arg == "--config") && moreArgs) {
-//                 this.configurationFile = args[++index];
-//             } else if ((arg == "-r" || arg == "--report") && moreArgs) {
-//                 this.reportFile = args[++index];
-//             } else if ((arg == "-d" || arg == "--duration") && moreArgs) {
-//                 this.duration = Converter.stringToLong(args[++index], 60);
-//             } else if ((arg == "-m" || arg == "--measure") && moreArgs) {
-//                 let measure = args[++index].toLowerCase();
-//                 this.measurementType = measure.startsWith("nom")
-//                     ? MeasurementType.Nominal : MeasurementType.Peak;
-//             } else if ((arg == "-x" || arg == "--execute") && moreArgs) {
-//                 let execution = args[++index].toLowerCase();
-//                 this.executionType = execution.startsWith("seq")
-//                     ? ExecutionType.Sequential : ExecutionType.Proportional;
-//             } else if ((arg == "-n" || arg == "--nominal") && moreArgs) {
-//                 this.nominalRate = Converter.stringToDouble(args[++index], 1);
-//             } else if (arg == "-h" || arg == "--help") {
-//                 this.showHelp = true;
-//             } else if (arg == "-B" || arg == "--show-benchmarks") {
-//                 this.showBenchmarks = true;
-//             } else if (arg == "-P" || arg == "--show-params") {
-//                 this.showParameters = true;
-//             } else if (arg == "-R" || arg == "--show-report") {
-//                 this.showReport = true;
-//             } else if (arg == "-e" || arg == "--environment") {
-//                 this.measureEnvironment = true;
-//             }
-//         }
-//     }
+func NewCommandLineArgs(args []string) *CommandLineArgs {
+	c := CommandLineArgs{}
+	c.Modules = make([]string, 0)
+	c.Classes = make([]string, 0)
+	c.Benchmarks = make([]string, 0)
+	c.Parameters = make(map[string]string, 0)
+	c.ReportFile = "BenchmarkReport.txt"
+	c.Duration = 60
+	c.ShowHelp = false
+	c.ShowBenchmarks = false
+	c.ShowParameters = false
+	c.ShowReport = false
+	c.MeasureEnvironment = false
+	c.MeasurementType = benchrunner.Peak
+	c.ExecutionType = benchrunner.Proportional
+	c.NominalRate = 1
+	c.processArguments(args)
+	return &c
+}
 
-//     public modules: string[] = [];
-//     public classes: string[] = [];
-//     public benchmarks: string[] = [];
-//     public parameters: any = {};
-//     public configurationFile: string;
-//     public reportFile: string = "BenchmarkReport.txt";
-//     public duration: number = 60;
-//     public showHelp: boolean = false;
-//     public showBenchmarks: boolean = false;
-//     public showParameters: boolean = false;
-//     public showReport: boolean = false;
-//     public measureEnvironment: boolean = false;
-//     public measurementType: MeasurementType = MeasurementType.Peak;
-//     public executionType: ExecutionType = ExecutionType.Proportional;
-//     public nominalRate: number = 1;
-// }
+func (c *CommandLineArgs) processArguments(args []string) {
+	for index := 2; index < len(args); index++ {
+		arg := args[index]
+		moreArgs := index < len(args)-1
+
+		if (arg == "-a" || arg == "-j" || arg == "--module") && moreArgs {
+			index += 1
+			module := args[index]
+			c.Modules = append(c.Modules, module)
+		} else if (arg == "-l" || arg == "--class") && moreArgs {
+			index += 1
+			class := args[index]
+			c.Classes = append(c.Classes, class)
+		} else if (arg == "-b" || arg == "--benchmark") && moreArgs {
+			index += 1
+			benchmark := args[index]
+			c.Benchmarks = append(c.Benchmarks, benchmark)
+		} else if (arg == "-p" || arg == "--param") && moreArgs {
+			index += 1
+			param := args[index]
+			pos := strings.Index(param, "=")
+			key := param
+			if pos > 0 {
+				key = param[:pos-1]
+			}
+			value := ""
+			if pos > 0 {
+				value = param[pos+1:]
+			}
+			c.Parameters[key] = value
+		} else if (arg == "-c" || arg == "--config") && moreArgs {
+			index += 1
+			c.ConfigurationFile = args[index]
+		} else if (arg == "-r" || arg == "--report") && moreArgs {
+			index += 1
+			c.ReportFile = args[index]
+		} else if (arg == "-d" || arg == "--Duration") && moreArgs {
+			index += 1
+			c.Duration = int64(util.Converter.StringToLong(args[index], int32(60)))
+		} else if (arg == "-m" || arg == "--measure") && moreArgs {
+			index += 1
+			measure := strings.ToLower(args[index])
+			c.MeasurementType = benchrunner.Peak
+			if strings.HasPrefix(measure, "nom") {
+				c.MeasurementType = benchrunner.Nominal
+			}
+		} else if (arg == "-x" || arg == "--execute") && moreArgs {
+			index += 1
+			execution := strings.ToLower(args[index])
+			c.ExecutionType = benchrunner.Proportional
+			if strings.HasPrefix(execution, "seq") {
+				c.ExecutionType = benchrunner.Sequential
+			}
+
+		} else if (arg == "-n" || arg == "--nominal") && moreArgs {
+			index += 1
+			c.NominalRate = util.Converter.StringToDouble(args[index], 1.0)
+		} else if arg == "-h" || arg == "--help" {
+			c.ShowHelp = true
+		} else if arg == "-B" || arg == "--show-Benchmarks" {
+			c.ShowBenchmarks = true
+		} else if arg == "-P" || arg == "--show-params" {
+			c.ShowParameters = true
+		} else if arg == "-R" || arg == "--show-report" {
+			c.ShowReport = true
+		} else if arg == "-e" || arg == "--environment" {
+			c.MeasureEnvironment = true
+		}
+	}
+}

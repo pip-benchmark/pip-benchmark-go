@@ -2,17 +2,23 @@ package benchmark
 
 type Benchmark struct {
 	IExecutable
-	name        string
-	description string
-	Context     IExecutionContext
+	name          string
+	description   string
+	Context       IExecutionContext
+	benchmarkType string
 }
 
-func NewBenchmark(name string, description string) *Benchmark {
+func NewBenchmark(name string, description string, benchmarkType string) *Benchmark {
 	c := Benchmark{
-		name:        name,
-		description: description,
+		name:          name,
+		description:   description,
+		benchmarkType: benchmarkType,
 	}
 	return &c
+}
+
+func (c *Benchmark) Type() string {
+	return c.benchmarkType
 }
 
 func (c *Benchmark) Name() string {

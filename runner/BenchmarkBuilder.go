@@ -1,62 +1,68 @@
-import { BenchmarkRunner } from './BenchmarkRunner';
-import { BenchmarkSuite } from '../BenchmarkSuite';
-import { MeasurementType } from './config/MeasurementType';
-import { ExecutionType } from './config/ExecutionType';
-import { timingSafeEqual } from 'crypto';
+package runner
 
-export class BenchmarkBuilder {
-    protected _runner: BenchmarkRunner = new BenchmarkRunner();
+import (
+	benchmark "github.com/pip-benchmark/pip-benchmark-go/benchmark"
+)
 
-    public forceContinue(isForceContinue: boolean = false): BenchmarkBuilder {
-        this._runner.configuration.forceContinue = isForceContinue;
-        return this;
-    }
+type BenchmarkBuilder struct {
+	Runner *BenchmarkRunner
+}
 
-    public measureAs(measurementType: MeasurementType): BenchmarkBuilder {
-        this._runner.configuration.measurementType = measurementType;
-        return this;
-    }
+func NewBenchmarkBuilder() *BenchmarkBuilder {
+	c := BenchmarkBuilder{}
+	c.Runner = NewBenchmarkRunner()
+	return &c
+}
 
-    public withNominalRate(nominalRate: number): BenchmarkBuilder {
-        this._runner.configuration.nominalRate = nominalRate;
-        return this;
-    } 
+func (c *BenchmarkBuilder) ForceContinue(isForceContinue bool) *BenchmarkBuilder {
+	c.Runner.configuration.forceContinue = isForceContinue
+	return c
+}
 
-    public executeAs(executionType: ExecutionType): BenchmarkBuilder {
-        this._runner.configuration.executionType = executionType;
-        return this;
-    }
+func (c *BenchmarkBuilder) MeasureAs(measurementType MeasurementType) *BenchmarkBuilder {
+	c.Runner.configuration.measurementType = measurementType
+	return c
+}
 
-    public forDuration(duration: number): BenchmarkBuilder {
-        this._runner.configuration.duration = duration;
-        return this;
-    }
+func (c *BenchmarkBuilder) WithNominalRate(nominalRate float64) *BenchmarkBuilder {
+	c.Runner.configuration.nominalRate = nominalRate
+	return c
+}
 
-    public addSuite(suite: BenchmarkSuite): BenchmarkBuilder {
-        this._runner.benchmarks.addSuite(suite);
-        return this;
-    }
+func (c *BenchmarkBuilder) ExecuteAs(executionType ExecutionType) *BenchmarkBuilder {
+	c.Runner.configuration.executionType = executionType
+	return c
+}
 
-    public withParameter(name: string, value: any): BenchmarkBuilder {
-        let parameters: any = {};
-        parameters[name] = value;
-        this._runner.parameters.set(parameters);
-        return this;
-    }
+func (c *BenchmarkBuilder) ForDuration(duration int64) *BenchmarkBuilder {
+	c.Runner.configuration.duration = duration
+	return c
+}
 
-    public withBenchmark(name: string): BenchmarkBuilder {
-        this._runner.benchmarks.selectByName([name]);
-        return this;
-    }
+func (c *BenchmarkBuilder) AddSuite(suite *benchmark.BenchmarkSuite) *BenchmarkBuilder {
+	c.Runner.benchmarks.AddSuite(suite)
+	return c
+}
 
-    public withAllBenchmarks(): BenchmarkBuilder {
-        this._runner.benchmarks.selectAll();
-        return this;
-    }
+func (c *BenchmarkBuilder) WithParameter(name string, value string) *BenchmarkBuilder {
+	parameters := make(map[string]string)
+	parameters[name] = value
+	c.Runner.parameters.Set(parameters)
+	return c
+}
 
-    public create(): BenchmarkRunner {
-        let result = this._runner;
-        this._runner = new BenchmarkRunner();
-        return result;
-    }
+func (c *BenchmarkBuilder) WithBenchmark(name string) *BenchmarkBuilder {
+	c.Runner.benchmarks.SelectByName([]string{name})
+	return c
+}
+
+func (c *BenchmarkBuilder) WithAllBenchmarks() *BenchmarkBuilder {
+	c.Runner.benchmarks.SelectAll()
+	return c
+}
+
+func (c *BenchmarkBuilder) Create() *BenchmarkRunner {
+	result := c.Runner
+	c.Runner = NewBenchmarkRunner()
+	return result
 }

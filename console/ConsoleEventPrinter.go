@@ -1,50 +1,59 @@
 package console
 
-// let util = require('util');
+import (
+	"fmt"
+	"strconv"
+	"time"
 
-// import { BenchmarkRunner } from '../runner/BenchmarkRunner';
-// import { BenchmarkResult } from '../runner/results/BenchmarkResult';
-// import { ExecutionState } from '../runner/execution/ExecutionState';
+	benchrunner "github.com/pip-benchmark/pip-benchmark-go/runner"
+)
 
-// export class ConsoleEventPrinter {
+var ConsoleEventPrinter TConsoleEventPrinter = TConsoleEventPrinter{}
 
-//     public static attach(runner: BenchmarkRunner): void {
-//         runner.execution.addUpdatedListener(ConsoleEventPrinter.onStateUpdated);
-//         runner.results.addErrorListener(ConsoleEventPrinter.onErrorReported);
-//         runner.results.addMessageListener(ConsoleEventPrinter.onMessageSent);
-//         runner.results.addUpdatedListener(ConsoleEventPrinter.onResultUpdated);
-//     }
+type TConsoleEventPrinter struct {
+}
 
-//     public static onStateUpdated(state: ExecutionState): void {
-//         if (state == ExecutionState.Running)
-//             console.log("Measuring....");
-//         else if (state == ExecutionState.Completed)
-//             console.log("Completed measuring.");
-//     }
+func (c *TConsoleEventPrinter) Attach(runner *benchrunner.BenchmarkRunner) {
+	upd := benchrunner.ExecutionCallback(ConsoleEventPrinter.OnStateUpdated)
+	runner.Execution().AddUpdatedListener(&upd)
+	errLis := benchrunner.ErrorCallback(ConsoleEventPrinter.OnErrorReported)
+	runner.Results().AddErrorListener(&errLis)
+	msgLis := benchrunner.MessageCallback(ConsoleEventPrinter.OnMessageSent)
+	runner.Results().AddMessageListener(&msgLis)
+	resUpd := benchrunner.ResultCallback(ConsoleEventPrinter.OnResultUpdated)
+	runner.Results().AddUpdatedListener(&resUpd)
+}
 
-//     public static onResultUpdated(result: BenchmarkResult): void {
-//         if (result != null) {
-//             let output = util.format("%s Performance: %d %d>%d>%d CPU Load: %d %d>%d>%d Errors: %d",
-//                 new Date().toISOString(),
-//                 result.performanceMeasurement.currentValue.toFixed(2),
-//                 result.performanceMeasurement.minValue.toFixed(2),
-//                 result.performanceMeasurement.averageValue.toFixed(2),
-//                 result.performanceMeasurement.maxValue.toFixed(2),
-//                 result.cpuLoadMeasurement.currentValue.toFixed(2),
-//                 result.cpuLoadMeasurement.minValue.toFixed(2),
-//                 result.cpuLoadMeasurement.averageValue.toFixed(2),
-//                 result.cpuLoadMeasurement.maxValue.toFixed(2),
-//                 result.errors.length
-//             );
-//             console.log(output);
-//         }
-//     }
+func (c *TConsoleEventPrinter) OnStateUpdated(state benchrunner.ExecutionState) {
+	if state == benchrunner.Running {
+		fmt.Println("Measuring....")
+	} else if state == benchrunner.Completed {
+		fmt.Println("Completed measuring.")
+	}
+}
 
-//     public static onMessageSent(message: string): void {
-//         console.log(message);
-//     }
+func (c *TConsoleEventPrinter) OnResultUpdated(result *benchrunner.BenchmarkResult) {
+	if result != nil {
+		output := fmt.Sprintf("%s Performance: %s %s>%s>%s CPU Load: %s %s>%s>%s Errors: %d",
+			time.Now().Format(time.RFC3339),
+			strconv.FormatFloat(result.PerformanceMeasurement.CurrentValue, 'e', 2, 64),
+			strconv.FormatFloat(result.PerformanceMeasurement.MinValue, 'e', 2, 64),
+			strconv.FormatFloat(result.PerformanceMeasurement.AverageValue, 'e', 2, 64),
+			strconv.FormatFloat(result.PerformanceMeasurement.MaxValue, 'e', 2, 64),
+			strconv.FormatFloat(result.CpuLoadMeasurement.CurrentValue, 'e', 2, 64),
+			strconv.FormatFloat(result.CpuLoadMeasurement.MinValue, 'e', 2, 64),
+			strconv.FormatFloat(result.CpuLoadMeasurement.AverageValue, 'e', 2, 64),
+			strconv.FormatFloat(result.CpuLoadMeasurement.MaxValue, 'e', 2, 64),
+			len(result.Errors),
+		)
+		fmt.Println(output)
+	}
+}
 
-//     public static onErrorReported(message: string): void {
-//         console.error(message);
-//     }
-// }
+func (c *TConsoleEventPrinter) OnMessageSent(message string) {
+	fmt.Println(message)
+}
+
+func (c *TConsoleEventPrinter) OnErrorReported(message error) {
+	fmt.Println(message)
+}

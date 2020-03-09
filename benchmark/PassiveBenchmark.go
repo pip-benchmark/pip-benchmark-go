@@ -10,7 +10,7 @@ type PassiveBenchmark struct {
 
 func NewPassiveBenchmark(name string, description string) *PassiveBenchmark {
 	c := PassiveBenchmark{
-		Benchmark: NewBenchmark(name, description),
+		Benchmark: NewBenchmark(name, description, "PassiveBenchmark"),
 	}
 	c.Benchmark.IExecutable = &c
 	return &c

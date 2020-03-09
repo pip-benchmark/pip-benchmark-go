@@ -1,4 +1,4 @@
-package standardbenchmarks
+package runner
 
 import (
 	"math"
@@ -10,7 +10,7 @@ import (
 	benchmark "github.com/pip-benchmark/pip-benchmark-go/benchmark"
 )
 
-type StandardDiskBenchmark struct {
+type DefaultDiskBenchmark struct {
 	*benchmark.Benchmark
 	nameText        string
 	descriptionText string
@@ -24,8 +24,8 @@ type StandardDiskBenchmark struct {
 	//buffer   *bytes.Buffer
 }
 
-func NewStandardDiskBenchmark() *StandardDiskBenchmark {
-	c := StandardDiskBenchmark{
+func NewDefaultDiskBenchmark() *DefaultDiskBenchmark {
+	c := DefaultDiskBenchmark{
 		nameText:        "Disk",
 		descriptionText: "Measures disk read and write operations",
 		bufferSize:      512,
@@ -37,7 +37,7 @@ func NewStandardDiskBenchmark() *StandardDiskBenchmark {
 	return &c
 }
 
-func (c *StandardDiskBenchmark) SetUp() error {
+func (c *DefaultDiskBenchmark) SetUp() error {
 	id := int64(math.Ceil(1000000.0 + rand.Float64()*9000000.0))
 	c.fileName = "./DiskBenchmark-" + strconv.FormatInt(id, 10) + ".dat"
 
@@ -49,7 +49,7 @@ func (c *StandardDiskBenchmark) SetUp() error {
 	return nil
 }
 
-func (c *StandardDiskBenchmark) Execute() error {
+func (c *DefaultDiskBenchmark) Execute() error {
 	if c.fd == nil {
 		return nil
 	}
@@ -99,7 +99,7 @@ func (c *StandardDiskBenchmark) Execute() error {
 	return nil
 }
 
-func (c *StandardDiskBenchmark) TearDown() error {
+func (c *DefaultDiskBenchmark) TearDown() error {
 
 	if c.fd != nil {
 		c.fd.Close()

@@ -9,16 +9,22 @@ type Parameter struct {
 	description  string
 	defaultValue string
 	value        string
+	paramType    string
 }
 
-func NewParameter(name string, description string, defaultValue string) *Parameter {
+func NewParameter(name string, description string, defaultValue string, paramType string) *Parameter {
 	c := Parameter{
 		name:         name,
 		description:  description,
 		defaultValue: defaultValue,
 		value:        defaultValue,
+		paramType:    paramType,
 	}
 	return &c
+}
+
+func (c *Parameter) Type() string {
+	return c.paramType
 }
 
 func (c *Parameter) Name() string {

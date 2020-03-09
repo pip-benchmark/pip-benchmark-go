@@ -1,4 +1,4 @@
-package standartbenchmarks
+package standardbenchmarks
 
 import (
 	"math/rand"

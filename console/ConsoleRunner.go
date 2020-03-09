@@ -1,186 +1,203 @@
 package console
 
-// // let _ = require('lodash');
-// // let async = require('async');
-// // let util = require('util');
+import (
+	"fmt"
+	"os"
+	"strconv"
+	"sync"
 
-// // import { BenchmarkRunner } from '../runner/BenchmarkRunner';
-// // import { CommandLineArgs } from './CommandLineArgs';
-// // import { ConsoleEventPrinter } from './ConsoleEventPrinter';
+	benchrunner "github.com/pip-benchmark/pip-benchmark-go/runner"
+)
 
-// type ConsoleRunner struct {
-//     private _args: CommandLineArgs;
-//     private _runner: BenchmarkRunner;
-// }
-//     public constructor() { }
+type ConsoleRunner struct {
+	args   *CommandLineArgs
+	runner *benchrunner.BenchmarkRunner
+}
 
-//     private start(args: string[]): void {
-//         this._args = new CommandLineArgs(args);
-//         this._runner = new BenchmarkRunner();
+func (c *ConsoleRunner) start(args []string) {
+	c.args = NewCommandLineArgs(args)
+	c.runner = benchrunner.NewBenchmarkRunner()
 
-//         ConsoleEventPrinter.attach(this._runner);
+	ConsoleEventPrinter.Attach(c.runner)
 
-//         this.executeBatchMode();
-//     }
+	c.executeBatchMode()
+}
 
-//     public stop(): void {
-//         this._runner.stop();
-//     }
+func (c *ConsoleRunner) Stop() {
+	c.runner.Stop()
+}
 
-//     private executeBatchMode(): void {
-//         try {
-//             if (this._args.showHelp) {
-//                 this.printHelp();
-//                 return;
-//             }
+func (c *ConsoleRunner) executeBatchMode() {
 
-//             // Load modules
-//             for (let module of this._args.modules) {
-//                 this._runner.benchmarks.addSuitesFromModule(module);
-//             }
+	if c.args.ShowHelp {
+		c.PrintHelp()
+		return
+	}
 
-//             // Load test suites classes
-//             for (let clazz of this._args.classes) {
-//                 this._runner.benchmarks.addSuiteFromClass(clazz);
-//             }
+	// Load modules
+	for _, module := range c.args.Modules {
+		c.runner.Benchmarks().AddSuitesFromModule(module)
+	}
 
-//             // Load configuration
-//             if (this._args.configurationFile != null)
-//                 this._runner.parameters.loadFromFile(this._args.configurationFile);
+	// Load test suites classes
+	for _, class := range c.args.Classes {
+		c.runner.Benchmarks().AddSuiteFromClass(class)
+	}
 
-//             // Set parameters
-//             if (!_.isEmpty(this._args.parameters))
-//                 this._runner.parameters.set(this._args.parameters);
+	// Load configuration
+	if c.args.ConfigurationFile != "" {
+		c.runner.Parameters().LoadFromFile(c.args.ConfigurationFile)
+	}
 
-//             // Select benchmarks
-//             if (this._args.benchmarks.length == 0)
-//                 this._runner.benchmarks.selectAll();
-//             else
-//                 this._runner.benchmarks.selectByName(this._args.benchmarks);
+	// Set parameters
+	if len(c.args.Parameters) != 0 {
+		c.runner.Parameters().Set(c.args.Parameters)
+	}
 
-//             if (this._args.showParameters) {
-//                 this.printParameters();
-//                 return;
-//             }
+	// Select benchmarks
+	if len(c.args.Benchmarks) == 0 {
+		c.runner.Benchmarks().SelectAll()
+	} else {
+		c.runner.Benchmarks().SelectByName(c.args.Benchmarks)
+	}
 
-//             if (this._args.showBenchmarks) {
-//                 this.printBenchmarks();
-//                 return;
-//             }
+	if c.args.ShowParameters {
+		c.printParameters()
+		return
+	}
 
-//             async.series([
-//                 (callback) => {
-//                     // Benchmark the environment
-//                     if (this._args.measureEnvironment) {
-//                         console.log("Measuring Environment (wait up to 2 mins)...");
-//                         this._runner.environment.measure(true, true, false, (err) => {
-//                             let output = util.format(
-//                                 "CPU: %d, Video: %d, Disk: %d",
-//                                 (this._runner.environment.cpuMeasurement || 0).toFixed(2),
-//                                 (this._runner.environment.videoMeasurement || 0).toFixed(2),
-//                                 (this._runner.environment.diskMeasurement || 0).toFixed(2)
-//                             );
-//                             console.log(output);
+	if c.args.ShowBenchmarks {
+		c.printBenchmarks()
+		return
+	}
+	var errGlobal error
+	var wg sync.WaitGroup = sync.WaitGroup{}
 
-//                             callback(err);
-//                         });
-//                     } else callback();
-//                 },
-//                 (callback) => {
-//                     // Configure benchmarking
-//                     this._runner.configuration.measurementType = this._args.measurementType;
-//                     this._runner.configuration.nominalRate = this._args.nominalRate;
-//                     this._runner.configuration.executionType = this._args.executionType;
-//                     this._runner.configuration.duration = this._args.duration;
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		// Benchmark the environment
+		if c.args.MeasureEnvironment {
+			fmt.Println("Measuring Environment (wait up to 2 mins)...")
+			msrErr := c.runner.Environment().Measure(true, true, false)
+			output := fmt.Sprintf(
+				"CPU: %s, Video: %s, Disk: %s",
+				strconv.FormatFloat(c.runner.Environment().CpuMeasurement(), 'e', 2, 64),
+				strconv.FormatFloat(c.runner.Environment().VideoMeasurement(), 'e', 2, 64),
+				strconv.FormatFloat(c.runner.Environment().DiskMeasurement(), 'e', 2, 64))
+			fmt.Println(output)
+			if msrErr != nil {
+				errGlobal = msrErr
+			}
 
-//                     // Perform benchmarking
-//                     this._runner.run((err) => {
-//                         if (this._runner.results.all.length > 0)
-//                             console.log(this._runner.results.all[0].performanceMeasurement.averageValue.toFixed(2));
+		}
+	}()
+	wg.Wait()
 
-//                         // Generate report and save to file
-//                         if (this._args.reportFile != null)
-//                             this._runner.report.saveToFile(this._args.reportFile);
+	wg.Add(1)
 
-//                         // Show report in console
-//                         if (this._args.showReport)
-//                             console.log(this._runner.report.generate());
+	go func() {
+		defer wg.Done()
+		// Configure benchmarking
+		c.runner.Configuration().SetMeasurementType(c.args.MeasurementType)
+		c.runner.Configuration().SetNominalRate(c.args.NominalRate)
+		c.runner.Configuration().SetExecutionType(c.args.ExecutionType)
+		c.runner.Configuration().SetDuration(c.args.Duration)
 
-//                         callback(err);
-//                     });
-//                 }
-//             ], (err) => {
-//                 // Do nothing
-//             });
-//         }
-//         catch (ex) {
-//             console.error(ex);
-//         }
-//     }
+		// Perform benchmarking
+		c.runner.Run(func(err error) {
+			if len(c.runner.Results().All()) > 0 {
+				fmt.Println(strconv.FormatFloat(c.runner.Results().All()[0].PerformanceMeasurement.AverageValue, 'e', 2, 64))
+			}
+			// Generate report and save to file
+			if c.args.ReportFile != "" {
+				c.runner.Report().SaveToFile(c.args.ReportFile)
+			}
 
-//     public printHelp(): void {
-//         console.log("Pip.Benchmark Console Runner. (c) Conceptual Vision Consulting LLC 2017");
-//         console.log();
-//         console.log("Command Line Arguments:");
-//         console.log("-a <module>    - Module with benchmarks to be loaded. You may include multiple modules");
-//         console.log("-p <param>=<value> - Set parameter value. You may include multiple parameters");
-//         console.log("-b <benchmark>   - Name of benchmark to be executed. You may include multiple benchmarks");
-//         console.log("-c <config file> - File with parameters to be loaded");
-//         console.log("-r <report file> - File to save benchmarking report");
-//         console.log("-d <seconds>     - Benchmarking duration in seconds");
-//         console.log("-h               - Display this help screen");
-//         console.log("-B               - Show all available benchmarks");
-//         console.log("-P               - Show all available parameters");
-//         console.log("-R               - Show report");
-//         console.log("-e               - Measure environment");
-//         console.log("-x [prop|seq]    - Execution type: Proportional or Sequencial");
-//         console.log("-m [peak|nominal] - Measurement type: Peak or Nominal");
-//         console.log("-n <rate>        - Nominal rate in transactions per second");
-//     }
+			// Show report in console
+			if c.args.ShowReport {
+				fmt.Println(c.runner.Report().Generate())
+			}
 
-//     private printBenchmarks(): void {
-//         console.log("Pip.Benchmark Console Runner. (c) Conceptual Vision Consulting LLC 2017");
-//         console.log();
-//         console.log("Benchmarks:");
+			errGlobal = err
+		})
+	}()
+	wg.Wait()
 
-//         let suites = this._runner.benchmarks.suites;
-//         _.each(suites, (suite) => {
-//             _.each(suite.benchmarks, (benchmark) => {
-//                 console.log(benchmark.fullName + ' - ' + benchmark.description);
-//             });
-//         });
-//     }
+	if errGlobal != nil {
+		fmt.Println(errGlobal)
+	}
 
-//     private printParameters(): void {
-//         console.log("Pip.Benchmark Console Runner. (c) Conceptual Vision Consulting LLC 2017");
-//         console.log();
-//         console.log("Parameters:");
+}
 
-//         let parameters = this._runner.parameters.userDefined;
-//         for (let index = 0; index < parameters.length; index++) {
-//             let parameter = parameters[index];
-//             let defaultValue = parameter.defaultValue;
-//             defaultValue = defaultValue == null || defaultValue.length == 0
-//                     ? "" : " (Default: " + defaultValue + ")";
-//             console.log('' + parameter.name + ' - ' + parameter.description + defaultValue);
-//         }
-//     }
+func (c *ConsoleRunner) PrintHelp() {
+	fmt.Println("Pip.Benchmark Console Runner. (c) Conceptual Vision Consulting LLC 2017")
+	fmt.Println()
+	fmt.Println("Command Line Arguments:")
+	fmt.Println("-a <module>    - Module with benchmarks to be loaded. You may include multiple modules")
+	fmt.Println("-p <param>=<value> - Set parameter value. You may include multiple parameters")
+	fmt.Println("-b <benchmark>   - Name of benchmark to be executed. You may include multiple benchmarks")
+	fmt.Println("-c <config file> - File with parameters to be loaded")
+	fmt.Println("-r <report file> - File to save benchmarking report")
+	fmt.Println("-d <seconds>     - Benchmarking duration in seconds")
+	fmt.Println("-h               - Display this help screen")
+	fmt.Println("-B               - Show all available benchmarks")
+	fmt.Println("-P               - Show all available parameters")
+	fmt.Println("-R               - Show report")
+	fmt.Println("-e               - Measure environment")
+	fmt.Println("-x [prop|seq]    - Execution type: Proportional or Sequencial")
+	fmt.Println("-m [peak|nominal] - Measurement type: Peak or Nominal")
+	fmt.Println("-n <rate>        - Nominal rate in transactions per second")
+}
 
-//     public static run(args: string[]): void {
-//         let runner = new ConsoleRunner();
+func (c *ConsoleRunner) printBenchmarks() {
+	fmt.Println("Pip.Benchmark Console Runner. (c) Conceptual Vision Consulting LLC 2017")
+	fmt.Println()
+	fmt.Println("Benchmarks:")
 
-//         // Log uncaught exceptions
-//         process.on('uncaughtException', (ex) => {
-//             console.error(ex);
-//             console.error("Process is terminated");
-//             process.exit(1);
-//         });
+	suites := c.runner.Benchmarks().Suites()
+	for _, suite := range suites {
+		for _, benchmark := range suite.Benchmarks() {
+			fmt.Println(benchmark.FullName() + " - " + benchmark.Description())
+		}
+	}
+}
 
-//         // Gracefully shutdown
-//         process.on('exit', function () {
-//             runner.stop();
-//             //console.log("Goodbye!");
-//         });
+func (c *ConsoleRunner) printParameters() {
+	fmt.Println("Pip.Benchmark Console Runner. (c) Conceptual Vision Consulting LLC 2017")
+	fmt.Println()
+	fmt.Println("Parameters:")
 
-//         runner.start(args || process.argv);
-//     }
+	parameters := c.runner.Parameters().UserDefined()
+	for index := 0; index < len(parameters); index++ {
+		parameter := parameters[index]
+		defaultValue := parameter.DefaultValue()
+		if defaultValue != "" {
+			defaultValue = " (Default: " + defaultValue + ")"
+		}
+		fmt.Println(" " + parameter.Name() + " - " + parameter.Description() + defaultValue)
+	}
+}
+
+func Run(args []string) {
+	runner := &ConsoleRunner{}
+
+	//         // Log uncaught exceptions
+	//         process.on("uncaughtException", (ex) => {
+	//             console.error(ex);
+	//             console.error("Process is terminated");
+	//             process.exit(1);
+	//         });
+
+	// Gracefully shutdown
+	// process.on("exit", function () {
+	//     runner.Stop();
+	//     //fmt.Println("Goodbye!");
+	// });
+	if len(args) > 0 {
+		runner.start(args)
+	} else {
+		runner.start(os.Args)
+	}
+
+}

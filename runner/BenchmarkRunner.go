@@ -1,72 +1,68 @@
-import { ConfigurationManager } from './config/ConfigurationManager';
-import { ResultsManager } from './results/ResultsManager';
-import { BenchmarksManager } from './benchmarks/BenchmarksManager';
-import { ParametersManager } from './parameters/ParametersManager';
-import { ExecutionManager } from './execution/ExecutionManager';
-import { ReportGenerator } from './reports/ReportGenerator';
-import { EnvironmentManager } from './environment/EnvironmentManager';
+package runner
 
-export class BenchmarkRunner {
-    private _configuration: ConfigurationManager;
-    private _results: ResultsManager;
-    private _parameters: ParametersManager;
-    private _benchmarks: BenchmarksManager;
-    private _execution: ExecutionManager;
-    private _report: ReportGenerator;
-    private _environment: EnvironmentManager;
+type BenchmarkRunner struct {
+	configuration *ConfigurationManager
+	results       *ResultsManager
+	parameters    *ParametersManager
+	benchmarks    *BenchmarksManager
+	execution     *ExecutionManager
+	report        *ReportGenerator
+	environment   *EnvironmentManager
+}
 
-    public constructor() {
-        this._configuration = new ConfigurationManager();
-        this._results = new ResultsManager();
-        this._parameters = new ParametersManager(this._configuration);
-        this._benchmarks = new BenchmarksManager(this._parameters);
-        this._execution = new ExecutionManager(this._configuration, this._results);
-        this._environment = new EnvironmentManager();
-        this._report = new ReportGenerator(this._configuration, this._results, 
-            this._parameters, this._benchmarks, this._environment);
-    }
+func NewBenchmarkRunner() *BenchmarkRunner {
+	c := BenchmarkRunner{}
+	c.configuration = NewConfigurationManager()
+	c.results = NewResultsManager()
+	c.parameters = NewParametersManager(c.configuration)
+	c.benchmarks = NewBenchmarksManager(c.parameters)
+	c.execution = NewExecutionManager(c.configuration, c.results)
+	c.environment = NewEnvironmentManager()
+	c.report = NewReportGenerator(c.configuration, c.results,
+		c.parameters, c.benchmarks, c.environment)
+	return &c
+}
 
-    public get configuration(): ConfigurationManager {
-        return this._configuration;
-    }
+func (c *BenchmarkRunner) Configuration() *ConfigurationManager {
+	return c.configuration
+}
 
-    public get results(): ResultsManager {
-        return this._results;
-    }
+func (c *BenchmarkRunner) Results() *ResultsManager {
+	return c.results
+}
 
-    public get parameters(): ParametersManager {
-        return this._parameters;
-    }
+func (c *BenchmarkRunner) Parameters() *ParametersManager {
+	return c.parameters
+}
 
-    public get execution(): ExecutionManager {
-        return this._execution;
-    }
+func (c *BenchmarkRunner) Execution() *ExecutionManager {
+	return c.execution
+}
 
-    public get benchmarks(): BenchmarksManager {
-        return this._benchmarks;
-    }
+func (c *BenchmarkRunner) Benchmarks() *BenchmarksManager {
+	return c.benchmarks
+}
 
-    public get report(): ReportGenerator {
-        return this._report;
-    }
+func (c *BenchmarkRunner) Report() *ReportGenerator {
+	return c.report
+}
 
-    public get environment(): EnvironmentManager {
-        return this._environment;
-    }
+func (c *BenchmarkRunner) Environment() *EnvironmentManager {
+	return c.environment
+}
 
-    public get isRunning(): boolean {
-        return this._execution.isRunning;
-    }
+func (c *BenchmarkRunner) IsRunning() bool {
+	return c.execution.IsRunning()
+}
 
-    public start(): void {
-        this._execution.start(this._benchmarks.isSelected);
-    }
+func (c *BenchmarkRunner) Start() {
+	c.execution.Start(c.benchmarks.IsSelected())
+}
 
-    public stop(): void {
-        this._execution.stop();
-    }
+func (c *BenchmarkRunner) Stop() {
+	c.execution.Stop()
+}
 
-    public run(callback: (err: any) => void): void {
-        this._execution.run(this._benchmarks.isSelected, callback);
-    }
+func (c *BenchmarkRunner) Run(callback func(error)) {
+	c.execution.Run(c.benchmarks.IsSelected(), callback)
 }
