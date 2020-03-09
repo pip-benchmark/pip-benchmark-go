@@ -1,208 +1,261 @@
-let _ = require('lodash');
-let async = require('async');
+package execution
 
-import { MeasurementType } from '../config/MeasurementType';
-import { ConfigurationManager } from '../config/ConfigurationManager';
-import { ResultsManager } from '../results/ResultsManager';
-import { ExecutionState } from './ExecutionState';
-import { BenchmarkInstance } from '../benchmarks/BenchmarkInstance';
-import { BenchmarkSuiteInstance } from '../benchmarks/BenchmarkSuiteInstance';
-import { BenchmarkResult } from '../results/BenchmarkResult';
+import (
+	"math/rand"
+	"sync"
+	"time"
 
-import { ExecutionContext } from './ExecutionContext';
-import { ExecutionStrategy } from './ExecutionStrategy';
-import { ResultAggregator } from './ResultAggregator';
+	bench "github.com/pip-benchmark/pip-benchmark-go/runner/benchmarks"
+	benchconf "github.com/pip-benchmark/pip-benchmark-go/runner/config"
+	benchres "github.com/pip-benchmark/pip-benchmark-go/runner/results"
+)
 
-export class ProportionalExecutionStrategy extends ExecutionStrategy {
-    private _running: boolean = false;
-    private _aggregator: ResultAggregator;
-    private _ticksPerTransaction: number = 0;
-    private _lastExecutedTime: number;
-    private _stopTime: number;
-    private _benchmarkCount: number;
-    private _onlyBenchmark: BenchmarkInstance;
-    private _timeout: any;
-    
-    public constructor(configuration: ConfigurationManager, results: ResultsManager, 
-        execution: any, benchmarks: BenchmarkInstance[]) {
-        
-        super(configuration, results, execution, benchmarks);
+type ProportionalExecutionStrategy struct {
+	*ExecutionStrategy
+	running             bool
+	aggregator          ResultAggregator
+	ticksPerTransaction int64
+	lastExecutedTime    time.Time
+	stopTime            time.Time
+	benchmarkCount      int
+	onlyBenchmark       *bench.BenchmarkInstance
+	timeout             chan bool
+}
 
-        this._aggregator = new ResultAggregator(results, benchmarks);
-    }
+func NewProportionalExecutionStrategy(configuration *benchconf.ConfigurationManager, results *benchres.ResultsManager,
+	execution interface{}, benchmarks []*bench.BenchmarkInstance) *ProportionalExecutionStrategy {
+	c := ProportionalExecutionStrategy{}
+	c.ExecutionStrategy = NewExecutionStrategy(configuration, results, execution, benchmarks)
+	c.running = false
+	c.ticksPerTransaction = 0
+	c.ExecutionStrategy.IExecutionStrategy = &c
+	c.aggregator = NewResultAggregator(results, benchmarks)
+	return &c
+}
 
-    public start(callback?: (err: any) => void): void {
-        if (this._running) {
-            callback(null);
-            return;
-        }
-        
-        this._running = true;
-        this._aggregator.start();
+func (c *ProportionalExecutionStrategy) Start() error {
+	if c.running {
+		return nil
+	}
 
-        this.calculateProportionalRanges();
+	c.running = true
+	c.aggregator.Start()
 
-        if (this._configuration.measurementType == MeasurementType.Nominal)
-            this._ticksPerTransaction = 1000.0 / this._configuration.nominalRate;
+	c.calculateProportionalRanges()
 
-        // Initialize and start
-        async.each(
-            this._suites, 
-            (suite, callback) => {
-                let context = new ExecutionContext(suite, this._aggregator, this);
-                suite.setUp(context, callback);
-            },
-            (err) => {
-                // Abort if initialization failed
-                if (err) {
-                    this._aggregator.reportError(err);
-                    callback(err);
-                    return;
-                }
-                
-                // Execute benchmarks
-                this.execute(callback);
-            }
-        );
-    }
+	if c.Configuration.GetMeasurementType() == benchconf.Nominal {
+		c.ticksPerTransaction = 1000 / int64(c.Configuration.GetNominalRate())
+	}
 
-    public get isStopped(): boolean {
-        return !this._running;
-    }
+	// Initialize and start
+	var wg sync.WaitGroup = sync.WaitGroup{}
+	var err error
+	for _, suite := range c.Suites {
 
-    public stop(callback?: (err: any) => void): void {
-        // Interrupt any wait
-        if (this._timeout != null) {
-            clearTimeout(this._timeout);
-            this._timeout = null;
-        }
-        
-        // Stop and cleanup execution
-        if (this._running) {
-            this._running = false;
-            this._aggregator.stop();
+		wg.Add(1)
+		go func(s *bench.BenchmarkSuiteInstance) {
+			defer wg.Done()
+			context := NewExecutionContext(s, c.aggregator, c.ExecutionStrategy)
+			setupErr := s.SetUp(context)
+			if setupErr != nil {
+				err = setupErr
+			}
+		}(suite)
 
-            if (this._execution)
-                this._execution.stop();
+	}
 
-            // Deinitialize tests
-            async.each(
-                this._suites, 
-                (suite, callback) => {
-                    suite.tearDown(callback);
-                },
-                (err) => {
-                    if (callback) callback(err);
-                }
-            );
-        } else {
-            if (callback) callback(null);
-        }
-    }
+	wg.Wait()
 
-    private calculateProportionalRanges(): void {
-        let totalProportion = 0;
-        for (let benchmark of this._activeBenchmarks) {
-            totalProportion += benchmark.proportion;
-        }
+	// Abort if initialization failed
+	if err != nil {
+		c.aggregator.ReportError(err)
+		return err
+	}
 
-        let startRange = 0;
-        for (let benchmark of this._activeBenchmarks) {
-            let normalizedProportion = benchmark.proportion / totalProportion;
-            benchmark.startRange = startRange;
-            benchmark.endRange = startRange + normalizedProportion;
-            startRange += normalizedProportion;
-        }
-    }
+	// Execute benchmarks
+	return c.execute()
+}
 
-    private chooseBenchmarkProportionally(): BenchmarkInstance {
-        let proportion = Math.random();
+func (c *ProportionalExecutionStrategy) IsStopped() bool {
+	return !c.running
+}
 
-        return _.find(this._activeBenchmarks, (benchmark) => {
-            return benchmark.withinRange(proportion);
-        });
-    }
+func (c *ProportionalExecutionStrategy) Stop() error {
+	// Interrupt any wait
+	if c.timeout != nil {
+		c.timeout <- true
+		c.timeout = nil
+	}
 
-    private executeDelay(delay: number, callback: (err: any) => void): void {
-        this._timeout = setTimeout(() => {
-            this._timeout = null;
-            this._lastExecutedTime = Date.now();
+	// Stop and cleanup execution
+	if c.running {
+		c.running = false
+		c.aggregator.Stop()
 
-            callback(null)
-        }, delay);
-    }
+		if c.Execution != nil {
+			c.Execution.Stop()
+		}
 
-    private executeBenchmark(benchmark: BenchmarkInstance, callback: (err: any) => void): void {
-        try {
-            if (benchmark == null || benchmark.isPassive) {
-                // Delay if benchmarks are passive
-                this.executeDelay(500, callback);
-            } else {
-                // Execute active benchmark
-                benchmark.execute((err) => {
-                    // Process force continue
-                    if (err != null && this._configuration.forceContinue) {
-                        this._aggregator.reportError(err);
-                        err = null;
-                    }
+		// Deinitialize tests
+		var wg sync.WaitGroup = sync.WaitGroup{}
+		var err error
+		for _, suite := range c.Suites {
 
-                    // Increment counter
-                    let now = Date.now();
-                    if (err == null)
-                        this._aggregator.incrementCounter(1, now);
+			wg.Add(1)
+			go func(s *bench.BenchmarkSuiteInstance) {
+				defer wg.Done()
+				teardownErr := s.TearDown()
+				if teardownErr != nil {
+					err = teardownErr
+				}
+			}(suite)
+		}
+		wg.Wait()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
-                    // Introduce delay to keep nominal rate
-                    if (err == null && this._configuration.measurementType == MeasurementType.Nominal) {
-                        let delay = this._ticksPerTransaction - (now - this._lastExecutedTime);
-                        this._lastExecutedTime = now;
+func (c *ProportionalExecutionStrategy) calculateProportionalRanges() {
+	totalProportion := 0
+	for _, benchmark := range c.ActiveBenchmarks {
+		totalProportion += benchmark.GetProportion()
+	}
 
-                        if (delay > 0) 
-                            this.executeDelay(delay, callback);
-                        else callback(err);
-                    } else {
-                        this._lastExecutedTime = now;
-                        callback(err);
-                    }
-                });
-            }
-        } catch (ex) {
-            // Process force continue
-            if (this._configuration.forceContinue) {
-                this._aggregator.reportError(ex);
-                callback(null);
-            } else {
-                callback(ex);
-            }
-        }
-    }
+	startRange := 0
+	for _, benchmark := range c.ActiveBenchmarks {
+		normalizedProportion := benchmark.GetProportion() / totalProportion
+		benchmark.SetStartRange(startRange)
+		benchmark.SetEndRange(startRange + normalizedProportion)
+		startRange += normalizedProportion
+	}
+}
 
-    private execute(callback?: (err: any) => void): void {
-        this._lastExecutedTime = Date.now();
-        let duration = this._configuration.duration > 0 ? this._configuration.duration : 365 * 24 * 36000;
-        this._stopTime = Date.now() + duration * 1000;
+func (c *ProportionalExecutionStrategy) chooseBenchmarkProportionally() *bench.BenchmarkInstance {
+	proportion := rand.Int()
 
-        this._benchmarkCount = this._benchmarks.length;
-        this._onlyBenchmark = this._benchmarkCount == 1 ? this._benchmarks[0] : null;
+	for _, benchmark := range c.ActiveBenchmarks {
+		if benchmark.WithinRange(proportion) {
+			return benchmark
+		}
+	}
+	return nil
+}
 
-        // Execute benchmarks
-        async.whilst(
-            () => {
-                return this._running && this._lastExecutedTime < this._stopTime;
-            },
-            (callback) => {
-                let benchmark = this._onlyBenchmark != null 
-                    ? this._onlyBenchmark : this.chooseBenchmarkProportionally();
-                let called = 0;
-                this.executeBenchmark(
-                    benchmark, 
-                    (err) => { process.nextTick(callback, err); }
-                );
-            }, 
-            (err) => {
-                this.stop((err2) => {
-                    if (callback) callback(err);
-                });
-            }
-        );
-    }
+func (c *ProportionalExecutionStrategy) executeDelay(delay int, callback func(error)) {
+
+	interval := time.Duration(delay) * time.Millisecond
+
+	ticker := time.NewTicker(interval)
+	clear := make(chan bool)
+
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				c.lastExecutedTime = time.Now()
+				callback(nil)
+				ticker.Stop()
+				return
+			case <-clear:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
+	c.timeout = clear
+}
+
+func (c *ProportionalExecutionStrategy) executeBenchmark(benchmark *bench.BenchmarkInstance, callback func(error)) {
+
+	if benchmark == nil || benchmark.IsPassive() {
+		// Delay if benchmarks are passive
+		c.executeDelay(500, callback)
+	} else {
+		// Execute active benchmark
+		err := benchmark.Execute()
+
+		// Process force continue
+		if err != nil && c.Configuration.ForceContinue {
+			c.aggregator.ReportError(err)
+			err = nil
+		}
+
+		// Increment counter
+		now := time.Now()
+		if err == nil {
+			c.aggregator.IncrementCounter(1, now)
+		}
+
+		// Introduce delay to keep nominal rate
+		if err == nil && c.Configuration.GetMeasurementType() == benchconf.Nominal {
+			delay := c.ticksPerTransaction - (now.Unix() - c.lastExecutedTime.Unix())
+			c.lastExecutedTime = now
+
+			if delay > 0 {
+				c.executeDelay(int(delay), callback)
+			} else {
+				callback(err)
+			}
+		} else {
+			c.lastExecutedTime = now
+			callback(err)
+		}
+	}
+	// // Process force continue
+	// if c.Configuration.forceContinue {
+	// 	c.aggregator.ReportError(ex)
+	// 	callback(nil)
+	// } else {
+	// 	callback(ex)
+	// }
+}
+
+func (c *ProportionalExecutionStrategy) execute() error {
+	c.lastExecutedTime = time.Now()
+	duration := c.Configuration.Duration
+	if duration <= 0 {
+		duration = 365 * 24 * 36000
+	}
+	c.stopTime = time.Now().Unix() + duration*1000
+
+	c.benchmarkCount = len(c.Benchmarks)
+	c.onlyBenchmark = nil
+	if c.benchmarkCount == 1 {
+		c.onlyBenchmark = c.Benchmarks[0]
+	}
+
+	// Execute benchmarks
+	var errGlobal error
+	var wg sync.WaitGroup = sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for c.running && c.lastExecutedTime.Unix() < c.stopTime.Unix() {
+			benchmark := c.onlyBenchmark
+			if c.onlyBenchmark != nil {
+				benchmark = c.chooseBenchmarkProportionally()
+			}
+			//called := 0
+			var wg2 sync.WaitGroup = sync.WaitGroup{}
+			wg2.Add(1)
+			c.executeBenchmark(
+				benchmark,
+				func(err error) {
+					//process.nextTick(callback, err)
+					if err != nil {
+						errGlobal = err
+					}
+					wg2.Done()
+				})
+			wg2.Wait()
+		}
+	}()
+	wg.Wait()
+	if errGlobal != nil {
+		return c.Stop()
+	}
+	return nil
 }

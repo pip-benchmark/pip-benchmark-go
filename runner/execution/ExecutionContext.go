@@ -1,42 +1,46 @@
-import { IExecutionContext } from '../../IExecutionContext';
-import { BenchmarkSuiteInstance } from '../benchmarks/BenchmarkSuiteInstance';
-import { ExecutionStrategy } from './ExecutionStrategy';
-import { ResultAggregator } from './ResultAggregator';
+package execution
 
-export class ExecutionContext implements IExecutionContext {
-    private _suite: BenchmarkSuiteInstance;
-    private _aggregator: ResultAggregator;
-    private _strategy: ExecutionStrategy;
+import (
+	bench "github.com/pip-benchmark/pip-benchmark-go/runner/benchmarks"
+)
 
-    public constructor(suite: BenchmarkSuiteInstance, 
-        aggregator: ResultAggregator, strategy: ExecutionStrategy) {
+//implements IExecutionContext
+type ExecutionContext struct {
+	suite      *bench.BenchmarkSuiteInstance
+	aggregator *ResultAggregator
+	strategy   *ExecutionStrategy
+}
 
-        this._aggregator = aggregator;
-        this._suite = suite;
-        this._strategy = strategy;
-    }
-    
-    public get parameters(): any {
-    	return this._suite.suite.parameters;
-    }
+func NewExecutionContext(suite *bench.BenchmarkSuiteInstance,
+	aggregator *ResultAggregator, strategy *ExecutionStrategy) *ExecutionContext {
 
-    public incrementCounter(increment?: number): void {
-        this._aggregator.incrementCounter(increment || 1);
-    }
+	c := ExecutionContext{}
+	c.aggregator = aggregator
+	c.suite = suite
+	c.strategy = strategy
+	return &c
+}
 
-    public sendMessage(message: string): void {
-        this._aggregator.sendMessage(message);
-    }
+func (c *ExecutionContext) GetParameters() map[string]interface{} {
+	return c.suite.Suite().Parameters()
+}
 
-    public reportError(error: any): void {
-        this._aggregator.reportError(error);
-    }
+func (c *ExecutionContext) IncrementCounter(increment int) {
+	c.aggregator.IncrementCounter(increment)
+}
 
-    public get isStopped() {
-        return this._strategy.isStopped;
-    }
+func (c *ExecutionContext) SendMessage(message string) {
+	c.aggregator.SendMessage(message)
+}
 
-    public stop(): void {
-        this._strategy.stop();
-    }
+func (c *ExecutionContext) ReportError(err error) {
+	c.aggregator.ReportError(err)
+}
+
+func (c *ExecutionContext) IsStopped() bool {
+	return c.strategy.IsStopped()
+}
+
+func (c *ExecutionContext) Stop() {
+	c.strategy.Stop()
 }

@@ -1,87 +1,101 @@
-import { Measurement } from '../results/Measurement';
+package execution
 
-export abstract class BenchmarkMeter {
-    protected _lastMeasuredTime: number;
-    private _currentValue:  number;
-    private _minValue: number;
-    private _maxValue: number;
-    private _averageValue: number;
-    private _sumOfValues: number;
-    private _numberOfMeasurements: number;
+import (
+	"math"
+	"time"
 
-    public constructor() {
-        this.clear();
-    }
+	benchresult "github.com/pip-benchmark/pip-benchmark-go/runner/results"
+)
 
-    public get measurement(): Measurement {
-        return new Measurement(this.currentValue, this.minValue, 
-            this.averageValue, this.maxValue);
-    }
+type BenchmarkMeter struct {
+	LastMeasuredTime     time.Time
+	currentValue         float64
+	minValue             float64
+	maxValue             float64
+	averageValue         float64
+	sumOfValues          float64
+	numberOfMeasurements int
+	IPerfomedMesurement
+}
 
-    public get lastMeasuredTime(): number {
-        return this._lastMeasuredTime; 
-    }
-    
-    public set lastMeasuredTime(value: number) {
-        this._lastMeasuredTime = value;
-    }
+func NewBenchmarkMeter() *BenchmarkMeter {
+	c := BenchmarkMeter{}
+	c.Clear()
+	return &c
+}
 
-    public get currentValue(): number {
-        return this._currentValue;
-    }
-    
-    public set currentValue(value: number) {
-        this._currentValue = value;
-    }
+func (c *BenchmarkMeter) Measurement() *benchresult.Measurement {
+	return benchresult.NewMeasurement(c.currentValue, c.minValue,
+		c.averageValue, c.maxValue)
+}
 
-    public get minValue(): number {
-        return this._minValue < Number.MAX_VALUE ? this._minValue : 0;
-    }
-    
-    public set minValue(value: number) {
-        this._minValue = value;
-    }
+func (c *BenchmarkMeter) GetLastMeasuredTime() time.Time {
+	return c.LastMeasuredTime
+}
 
-    public get maxValue(): number {
-        return this._maxValue > Number.MIN_VALUE ? this._maxValue : 0; 
-    }
-    
-    public set maxValue(value: number) {
-        this._minValue = value;
-    }
+func (c *BenchmarkMeter) SetLastMeasuredTime(value time.Time) {
+	c.LastMeasuredTime = value
+}
 
-    public get averageValue(): number {
-        return this._averageValue; 
-    }
-    
-    public set averageValue(value: number) {
-        this._averageValue = value;
-    }
+func (c *BenchmarkMeter) GetCurrentValue() float64 {
+	return c.currentValue
+}
 
-    public clear(): void {
-        this._lastMeasuredTime = Date.now();
-        this._currentValue = this.performMeasurement();
-        this._minValue = Number.MAX_VALUE;
-        this._maxValue = Number.MIN_VALUE;
-        this._averageValue = 0;
-        this._sumOfValues = 0;
-        this._numberOfMeasurements = 0;
-    }
+func (c *BenchmarkMeter) SetCurrentValue(value float64) {
+	c.currentValue = value
+}
 
-    protected calculateAggregates(): void {
-        this._sumOfValues += this._currentValue;
-        this._numberOfMeasurements++;
-        this._averageValue = this._sumOfValues / this._numberOfMeasurements;
-        this._maxValue = Math.max(this._maxValue, this._currentValue);
-        this._minValue = Math.min(this._minValue, this._currentValue);
-    }
+func (c *BenchmarkMeter) GetMinValue() float64 {
+	if c.minValue < math.MaxFloat64 {
+		return c.minValue
+	}
+	return 0.0
+}
 
-    public measure(): number {
-        this._currentValue = this.performMeasurement();
-        this._lastMeasuredTime = Date.now();
-        this.calculateAggregates();
-        return this._currentValue;
-    }
+func (c *BenchmarkMeter) SetMinValue(value float64) {
+	c.minValue = value
+}
 
-    protected abstract performMeasurement(): number;
+func (c *BenchmarkMeter) GetmaxValue() float64 {
+	if c.maxValue > math.SmallestNonzeroFloat64 {
+		return c.maxValue
+	}
+	return 0.0
+}
+
+func (c *BenchmarkMeter) SetMaxValue(value float64) {
+	c.minValue = value
+}
+
+func (c *BenchmarkMeter) GetAverageValue() float64 {
+	return c.averageValue
+}
+
+func (c *BenchmarkMeter) SetAverageValue(value float64) {
+	c.averageValue = value
+}
+
+func (c *BenchmarkMeter) Clear() {
+	c.LastMeasuredTime = time.Now()
+	c.currentValue = c.PerformMeasurement()
+	c.minValue = math.MaxFloat64
+	c.maxValue = math.SmallestNonzeroFloat64
+	c.averageValue = 0
+	c.sumOfValues = 0
+	c.numberOfMeasurements = 0
+}
+
+func (c *BenchmarkMeter) CalculateAggregates() {
+	c.sumOfValues += c.currentValue
+	c.numberOfMeasurements++
+	c.averageValue = c.sumOfValues / (float64)(c.numberOfMeasurements)
+	c.maxValue = math.Max(c.maxValue, c.currentValue)
+	c.minValue = math.Min(c.minValue, c.currentValue)
+}
+
+func (c *BenchmarkMeter) Measure() float64 {
+	c.currentValue = c.PerformMeasurement()
+	c.LastMeasuredTime = time.Now()
+	c.CalculateAggregates()
+	return c.currentValue
 }

@@ -6,7 +6,7 @@ import (
 )
 
 type BenchmarkInstance struct {
-	suite      *benchmark.BenchmarkSuite
+	suite      *BenchmarkSuiteInstance
 	benchmark  *benchmark.Benchmark
 	selected   bool
 	proportion int
@@ -14,7 +14,7 @@ type BenchmarkInstance struct {
 	endRange   int
 }
 
-func NewBenchmarkInstance(suite *benchmark.BenchmarkSuite, benchmark *benchmark.Benchmark) *BenchmarkInstance {
+func NewBenchmarkInstance(suite *BenchmarkSuiteInstance, benchmark *benchmark.Benchmark) *BenchmarkInstance {
 	c := BenchmarkInstance{}
 	c.suite = suite
 	c.benchmark = benchmark
@@ -23,7 +23,7 @@ func NewBenchmarkInstance(suite *benchmark.BenchmarkSuite, benchmark *benchmark.
 	return &c
 }
 
-func (c *BenchmarkInstance) Suite() *benchmark.BenchmarkSuite {
+func (c *BenchmarkInstance) Suite() *BenchmarkSuiteInstance {
 	return c.suite
 }
 
@@ -51,11 +51,11 @@ func (c *BenchmarkInstance) Select(value bool) {
 	c.selected = value
 }
 
-// func (c *BenchmarkInstance) IsPassive() bool {
-// 	//TODO: Need fix type resolving!!!
-// 	//return c.benchmark instanceof PassiveBenchmark;
-// 	return true
-// }
+func (c *BenchmarkInstance) IsPassive() bool {
+	// 	//TODO: Need fix type resolving!!!
+	// 	//return c.benchmark instanceof PassiveBenchmark;
+	return true
+}
 
 func (c *BenchmarkInstance) GetProportion() int {
 	return c.proportion

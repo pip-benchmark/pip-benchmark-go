@@ -1,26 +1,32 @@
-import { BenchmarkMeter } from './BenchmarkMeter';
+package execution
 
-export class TransactionMeter extends BenchmarkMeter {
-    private _transactionCounter: number;
+import "time"
 
-    public constructor() {
-        super();
-    }
+type TransactionMeter struct {
+	*BenchmarkMeter
+	transactionCounter int
+}
 
-    public incrementTransactionCounter(): void {
-        this._transactionCounter++;
-    }
+func NewTransactionMeter() *TransactionMeter {
+	c := TransactionMeter{}
+	c.BenchmarkMeter = NewBenchmarkMeter()
+	c.BenchmarkMeter.IPerfomedMesurement = &c
+	return &c
+}
 
-    public setTransactionCounter(value: number): void {
-        this._transactionCounter = value;
-    }
+func (c *TransactionMeter) IncrementTransactionCounter() {
+	c.transactionCounter++
+}
 
-    protected performMeasurement(): number {
-        let currentTime = Date.now();
-        let durationInMsecs = currentTime - this._lastMeasuredTime;
-        let result = this._transactionCounter * 1000 / durationInMsecs;
-        this._lastMeasuredTime = currentTime;
-        this._transactionCounter = 0;
-        return result;
-    }
+func (c *TransactionMeter) SetTransactionCounter(value int) {
+	c.transactionCounter = value
+}
+
+func (c *TransactionMeter) PerformMeasurement() float64 {
+	currentTime := time.Now()
+	durationInMsecs := currentTime.Unix() - c.LastMeasuredTime.Unix()
+	result := float64(c.transactionCounter) * 1000.0 / float64(durationInMsecs)
+	c.LastMeasuredTime = currentTime
+	c.transactionCounter = 0
+	return result
 }

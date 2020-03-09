@@ -1,24 +1,31 @@
-import { Parameter } from '../../Parameter';
-import { Converter } from '../../utilities/Converter';
-import { ConfigurationManager } from '../config/ConfigurationManager';
+package parameters
 
-export class DurationParameter extends Parameter {
-    private _configuration: ConfigurationManager;
+import (
+	bench "github.com/pip-benchmark/pip-benchmark-go/benchmark"
+	runnerconf "github.com/pip-benchmark/pip-benchmark-go/runner/config"
+	benchconv "github.com/pip-benchmark/pip-benchmark-go/utilities"
+)
 
-    public constructor(configuration: ConfigurationManager) {
-        super(
-            "General.Benchmarking.Duration", 
-            "Duration of benchmark execution in seconds", 
-            "60"
-        );
-        this._configuration = configuration;
-    }
+type DurationParameter struct {
+	*bench.Parameter
+	configuration *runnerconf.ConfigurationManager
+}
 
-    public get value(): string {
-        return Converter.integerToString(this._configuration.duration); 
-    }
-    
-    public set value(value: string) {
-        this._configuration.duration = Converter.stringToInteger(value, 60);
-    }
+func NewDurationParameter(configuration *runnerconf.ConfigurationManager) *DurationParameter {
+	c := DurationParameter{}
+	c.Parameter = bench.NewParameter(
+		"General.Benchmarking.Duration",
+		"Duration of benchmark execution in seconds",
+		"60",
+	)
+	c.configuration = configuration
+	return &c
+}
+
+func (c *DurationParameter) GetValue() string {
+	return benchconv.Converter.IntegerToString(int(c.configuration.GetDuration()))
+}
+
+func (c *DurationParameter) SetValue(value string) {
+	c.configuration.SetDuration(int64(benchconv.Converter.StringToInteger(value, 60)))
 }

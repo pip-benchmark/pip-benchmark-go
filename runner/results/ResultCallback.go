@@ -1,3 +1,3 @@
-import { BenchmarkResult } from './BenchmarkResult';
+package results
 
-export type ResultCallback = (result: BenchmarkResult) => void;
+type ResultCallback func(result BenchmarkResult)

@@ -1,52 +1,66 @@
-let _ = require('lodash');
+package execution
 
-import { ConfigurationManager } from '../config/ConfigurationManager';
-import { ResultsManager } from '../results/ResultsManager';
-import { ExecutionState } from './ExecutionState';
-import { BenchmarkInstance } from '../benchmarks/BenchmarkInstance';
-import { BenchmarkSuiteInstance } from '../benchmarks/BenchmarkSuiteInstance';
-import { BenchmarkResult } from '../results/BenchmarkResult';
+import (
+	bench "github.com/pip-benchmark/pip-benchmark-go/runner/benchmarks"
+	benchconfig "github.com/pip-benchmark/pip-benchmark-go/runner/config"
+	benchresult "github.com/pip-benchmark/pip-benchmark-go/runner/results"
+)
 
-export abstract class ExecutionStrategy {
-    protected _configuration: ConfigurationManager;
-    protected _results: ResultsManager;
-    protected _execution: any;
+type ExecutionStrategy struct {
+	IExecutionStrategy
+	Configuration *benchconfig.ConfigurationManager
+	Results       *benchresult.ResultsManager
+	Execution     interface{}
 
-    protected _benchmarks: BenchmarkInstance[];
-    protected _activeBenchmarks: BenchmarkInstance[];
-    protected _suites: BenchmarkSuiteInstance[];
-
-    protected constructor(configuration: ConfigurationManager, 
-        results: ResultsManager, execution: any, benchmarks: BenchmarkInstance[]) {
-
-        this._configuration = configuration;
-        this._results = results;
-        this._execution = execution;
-
-        this._benchmarks = benchmarks;
-        this._activeBenchmarks = this.getActiveBenchmarks(benchmarks);
-        this._suites = this.getBenchmarkSuites(benchmarks);
-    }
-
-    private getActiveBenchmarks(benchmarks: BenchmarkInstance[]): BenchmarkInstance[] {
-        return _.filter(benchmarks, (benchmark) => {
-            return !benchmark.passive;
-        });
-    }
-
-    private getBenchmarkSuites(benchmarks: BenchmarkInstance[]): BenchmarkSuiteInstance[] {
-        let suites: BenchmarkSuiteInstance[] = [];
-        for (let index = 0; index < benchmarks.length; index++) {
-            let benchmark = benchmarks[index];
-            let suite = benchmark.suite;
-            if (!_.some(suites, (s) => s == suite))
-                suites.push(suite);
-        }
-        return suites;
-    }
-
-    public abstract isStopped: boolean;
-    public abstract start(callback?: (err: any) => void): void;
-    public abstract stop(callback?: (err: any) => void): void;
-
+	Benchmarks       []*bench.BenchmarkInstance
+	ActiveBenchmarks []*bench.BenchmarkInstance
+	Suites           []*bench.BenchmarkSuiteInstance
 }
+
+func NewExecutionStrategy(configuration *benchconfig.ConfigurationManager,
+	results *benchresult.ResultsManager, execution interface{}, benchmarks []*bench.BenchmarkInstance) *ExecutionStrategy {
+	c := ExecutionStrategy{}
+	c.Configuration = configuration
+	c.Results = results
+	c.Execution = execution
+
+	c.Benchmarks = benchmarks
+	c.ActiveBenchmarks = c.getActiveBenchmarks(benchmarks)
+	c.Suites = c.getBenchmarkSuites(benchmarks)
+	return &c
+}
+
+func (c *ExecutionStrategy) getActiveBenchmarks(benchmarks []*bench.BenchmarkInstance) []*bench.BenchmarkInstance {
+
+	result := make([]*bench.BenchmarkInstance, 0)
+	for _, bencmark := range benchmarks {
+		if !bencmark.IsPassive() {
+			result = append(result, bencmark)
+		}
+	}
+	return result
+}
+
+func (c *ExecutionStrategy) getBenchmarkSuites(benchmarks []*bench.BenchmarkInstance) []*bench.BenchmarkSuiteInstance {
+	suites := make([]*bench.BenchmarkSuiteInstance, 0)
+	var exists bool = false
+	for index := 0; index < len(benchmarks); index++ {
+		benchmark := benchmarks[index]
+		suite := benchmark.Suite()
+		exists = false
+		for i := range suites {
+			if suite == suites[i] {
+				exists = true
+				break
+			}
+		}
+		if !exists {
+			suites = append(suites, suite)
+		}
+	}
+	return suites
+}
+
+// public abstract isStopped bool
+// public abstract start() error
+// public abstract stop() error

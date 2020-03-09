@@ -6,13 +6,11 @@ import (
 	"runtime"
 )
 
-type SystemInfo struct {
-	parameters map[string]string
-}
+type SystemInfo map[string]string
 
-func NewSystemInfo() *SystemInfo {
+func NewSystemInfo() SystemInfo {
 	c := SystemInfo{}
-	c.parameters = make(map[string]string)
+	c = make(map[string]string)
 	host, err := os.Hostname()
 	if err == nil {
 		c.put("Machine Name", host)
@@ -26,9 +24,9 @@ func NewSystemInfo() *SystemInfo {
 	c.put("Operating System Architecture", runtime.GOARCH)
 	//c.put("Golang Name", (<any>process).release.name);
 	c.put("Golang Version", runtime.Version())
-	return &c
+	return c
 }
 
-func (c *SystemInfo) put(parameter string, value string) {
-	c.parameters[parameter] = value
+func (c SystemInfo) put(parameter string, value string) {
+	c[parameter] = value
 }

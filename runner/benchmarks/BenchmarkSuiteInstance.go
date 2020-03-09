@@ -16,7 +16,7 @@ func NewBenchmarkSuiteInstance(suite *benchmark.BenchmarkSuite) *BenchmarkSuiteI
 	c.suite = suite
 	c.benchmarks = make([]*BenchmarkInstance, 0)
 	for _, benchmark := range c.suite.Benchmarks() {
-		c.benchmarks = append(c.benchmarks, NewBenchmarkInstance(c.suite, benchmark))
+		c.benchmarks = append(c.benchmarks, NewBenchmarkInstance(&c, benchmark))
 	}
 	return &c
 }

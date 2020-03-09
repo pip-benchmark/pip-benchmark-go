@@ -2,7 +2,7 @@ package config
 
 type ConfigurationManager struct {
 	measurementType MeasurementType
-	nominalRate     int
+	nominalRate     float64
 	executionType   ExecutionType
 	duration        int64
 	forceContinue   bool
@@ -27,16 +27,16 @@ func (c *ConfigurationManager) GetMeasurementType() MeasurementType {
 
 func (c *ConfigurationManager) SetMeasurementType(value MeasurementType) {
 	c.measurementType = value
-	c.notifyChanged()
+	c.NotifyChanged()
 }
 
-func (c *ConfigurationManager) GetNominalRate() int {
+func (c *ConfigurationManager) GetNominalRate() float64 {
 	return c.nominalRate
 }
 
-func (c *ConfigurationManager) SetNominalRate(value int) {
+func (c *ConfigurationManager) SetNominalRate(value float64) {
 	c.nominalRate = value
-	c.notifyChanged()
+	c.NotifyChanged()
 }
 
 func (c *ConfigurationManager) GetExecutionType() ExecutionType {
@@ -45,7 +45,7 @@ func (c *ConfigurationManager) GetExecutionType() ExecutionType {
 
 func (c *ConfigurationManager) SetExecutionType(value ExecutionType) {
 	c.executionType = value
-	c.notifyChanged()
+	c.NotifyChanged()
 }
 
 func (c *ConfigurationManager) GetDuration() int64 {
@@ -54,7 +54,7 @@ func (c *ConfigurationManager) GetDuration() int64 {
 
 func (c *ConfigurationManager) SetDuration(value int64) {
 	c.duration = value
-	c.notifyChanged()
+	c.NotifyChanged()
 }
 
 func (c *ConfigurationManager) GetForceContinue() bool {
@@ -63,7 +63,7 @@ func (c *ConfigurationManager) GetForceContinue() bool {
 
 func (c *ConfigurationManager) SetForceContinue(value bool) {
 	c.forceContinue = value
-	c.notifyChanged()
+	c.NotifyChanged()
 }
 
 func (c *ConfigurationManager) AddChangeListener(listener *ConfigurationCallback) {
@@ -84,7 +84,7 @@ func (c *ConfigurationManager) RemoveChangeListener(listener *ConfigurationCallb
 	}
 }
 
-func (c *ConfigurationManager) notifyChanged() {
+func (c *ConfigurationManager) NotifyChanged() {
 	for index := 0; index < len(c.changeListeners); index++ {
 		listener := c.changeListeners[index]
 		(*listener)()

@@ -1,58 +1,66 @@
-let os = require('os');
+package execution
 
-import { BenchmarkMeter } from './BenchmarkMeter';
+import (
+	"time"
 
-export class CpuLoadMeter extends BenchmarkMeter {
-    private _lastTotalIdle: number;
-    private _lastTotal: number;
+	"github.com/shirou/gopsutil/cpu"
+)
 
-    public constructor() {
-        super();
-    }
+type CpuLoadMeter struct {
+	*BenchmarkMeter
+	lastTotalIdle float64
+	lastTotal     float64
+}
 
-    public clear(): void {
-        this._lastTotalIdle = null;
-        this._lastTotal = null;
+func NewCpuLoadMeter() *CpuLoadMeter {
+	c := CpuLoadMeter{}
+	c.BenchmarkMeter = NewBenchmarkMeter()
+	c.BenchmarkMeter.IPerfomedMesurement = &c
+	return &c
+}
 
-        super.clear();
-    }
+func (c *CpuLoadMeter) Clear() {
+	c.lastTotalIdle = 0
+	c.lastTotal = 0
+	c.BenchmarkMeter.Clear()
+}
 
-    protected performMeasurement(): number {
-        // Initialize current values
-        let currentTime = Date.now();
-        let currentTotalIdle = 0;
-        let currentTotal = 0;
+func (c *CpuLoadMeter) PerformMeasurement() float64 {
+	// Initialize current values
+	currentTime := time.Now()
+	currentTotalIdle := 0.0
+	currentTotal := 0.0
 
-        // Calculate current values
-        let cpus = os.cpus();
-        let cpuCount = cpus.length;
-        for (let index = 0; index < cpuCount; index++) {
-            let cpu = cpus[index];
-            for (let type in cpu.times)
-                currentTotal += cpu.times[type];
-            currentTotalIdle += cpu.times.idle;
-        }
-        currentTotal = currentTotal / cpuCount;
-        currentTotalIdle = currentTotalIdle / cpuCount;
+	// Calculate current values
+	cpus, cpuErr := cpu.Times(true)
+	if cpuErr != nil {
 
-        // Calculate CPU usage
-        let result = 0;
-        if (this._lastMeasuredTime != null) {
-            let elapsed = currentTime - this._lastMeasuredTime;
-            // Calculate only for 100 ms or more
-            if (elapsed > 100) {
-                let totalDifference = currentTotal - this._lastTotal;
-                let idleDifference = currentTotalIdle - this._lastTotalIdle;
-                result = 100 - ~~(100 * idleDifference / totalDifference);
-            }
-        }
+	}
+	cpuCount := len(cpus)
+	for index := 0; index < cpuCount; index++ {
+		cpu := cpus[index]
+		currentTotal += cpu.Total() - cpu.Idle
+		currentTotalIdle += cpu.Idle
+	}
+	currentTotal = currentTotal / (float64)(cpuCount)
+	currentTotalIdle = currentTotalIdle / (float64)(cpuCount)
 
-        // Save current values as last values
-        this._lastMeasuredTime = currentTime;
-        this._lastTotalIdle = currentTotalIdle;
-        this._lastTotal = currentTotal;
+	// Calculate CPU usage
+	result := 0.0
+	if !c.LastMeasuredTime.IsZero() {
+		elapsed := currentTime.UnixNano() - c.LastMeasuredTime.UnixNano()
+		// Calculate only for 100 ms or more
+		if time.Duration(elapsed) > 100*time.Millisecond {
+			totalDifference := currentTotal - c.lastTotal
+			idleDifference := currentTotalIdle - c.lastTotalIdle
+			result = 100.0 - float64(100*idleDifference/totalDifference)
+		}
+	}
 
-        return result;
-    }
+	// Save current values as last values
+	c.LastMeasuredTime = currentTime
+	c.lastTotalIdle = currentTotalIdle
+	c.lastTotal = currentTotal
 
+	return result
 }

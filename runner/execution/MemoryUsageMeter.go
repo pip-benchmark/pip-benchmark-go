@@ -1,15 +1,22 @@
-let os = require('os');
+package execution
 
-import { BenchmarkMeter } from './BenchmarkMeter';
+import (
+	"runtime"
+)
 
-export class MemoryUsageMeter extends BenchmarkMeter {
+type MemoryUsageMeter struct {
+	*BenchmarkMeter
+}
 
-    public constructor() {
-        super();
-    }
+func NewMemoryUsageMeter() *MemoryUsageMeter {
+	c := MemoryUsageMeter{}
+	c.BenchmarkMeter = NewBenchmarkMeter()
+	c.BenchmarkMeter.IPerfomedMesurement = &c
+	return &c
+}
 
-    protected performMeasurement(): number {
-        return (os.totalmem() - os.freemem()) / 1024 / 1024;
-    }
-
+func (c *MemoryUsageMeter) PerformMeasurement() float64 {
+	stat := runtime.MemStats{}
+	runtime.ReadMemStats(&stat)
+	return float64((stat.Sys - stat.Frees) / 1024 / 1024)
 }

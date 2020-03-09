@@ -1,92 +1,98 @@
-import { ResultCallback } from './ResultCallback';
-import { MessageCallback } from './MessageCallback';
-import { ErrorCallback } from './ErrorCallback';
-import { BenchmarkResult } from './BenchmarkResult';
+package results
 
-export class ResultsManager {
-    private _results: BenchmarkResult[] = [];
+type ResultsManager struct {
+	results          []*BenchmarkResult
+	updatedListeners []*ResultCallback
+	messageListeners []*MessageCallback
+	errorListeners   []*ErrorCallback
+}
 
-    private _updatedListeners: ResultCallback[] = [];
-    private _messageListeners: MessageCallback[] = [];
-    private _errorListeners: ErrorCallback[] = [];
+func NewResultsManager() *ResultsManager {
+	return &ResultsManager{
+		results:          make([]*BenchmarkResult, 0),
+		updatedListeners: make([]*ResultCallback, 0),
+		messageListeners: make([]*MessageCallback, 0),
+		errorListeners:   make([]*ErrorCallback, 0),
+	}
+}
 
-    public constructor() {}
+func (c *ResultsManager) All() []*BenchmarkResult {
+	return c.results
+}
 
-    public get all(): BenchmarkResult[] {
-        return this._results;
-    }
+func (c *ResultsManager) Add(result *BenchmarkResult) {
+	c.results = append(c.results, result)
+}
 
-    public add(result: BenchmarkResult): void {
-        this._results.push(result);
-    }
+func (c *ResultsManager) Clear() {
+	c.results = make([]*BenchmarkResult, 0)
+}
 
-    public clear(): void {
-        this._results = [];
-    }
+func (c *ResultsManager) AddUpdatedListener(listener *ResultCallback) {
+	c.updatedListeners = append(c.updatedListeners, listener)
+}
 
-    public addUpdatedListener(listener: ResultCallback): void {
-        this._updatedListeners.push(listener);
-    }
+func (c *ResultsManager) RemoveUpdatedListener(listener *ResultCallback) {
+	for index := len(c.updatedListeners) - 1; index >= 0; index-- {
+		if c.updatedListeners[index] == listener {
+			if index == len(c.updatedListeners) {
+				c.updatedListeners = c.updatedListeners[:index-1]
+			} else {
+				c.updatedListeners = append(c.updatedListeners[:index], c.updatedListeners[index+1:]...)
+			}
+		}
+	}
+}
 
-    public removeUpdatedListener(listener: ResultCallback): void {
-        for (let index = this._updatedListeners.length - 1; index >= 0; index--) {
-            if (this._updatedListeners[index] == listener)
-                this._updatedListeners = this._updatedListeners.splice(index, 1);
-        }
-    }
+func (c *ResultsManager) NotifyUpdated(result BenchmarkResult) {
+	for index := 0; index < len(c.updatedListeners); index++ {
+		listener := c.updatedListeners[index]
+		(*listener)(result)
+	}
+}
 
-    public notifyUpdated(result: BenchmarkResult): void {
-        for (let index = 0; index < this._updatedListeners.length; index++) {
-            try {
-                let listener = this._updatedListeners[index];
-                listener(result);
-            } catch (ex) {
-                // Ignore and send a message to the next listener.
-            }
-        }
-    }
+func (c *ResultsManager) AddMessageListener(listener *MessageCallback) {
+	c.messageListeners = append(c.messageListeners, listener)
+}
 
-    public addMessageListener(listener: MessageCallback): void {
-        this._messageListeners.push(listener);
-    }
+func (c *ResultsManager) RemoveMessageListener(listener *MessageCallback) {
+	for index := len(c.messageListeners) - 1; index >= 0; index-- {
+		if c.messageListeners[index] == listener {
+			if index == len(c.messageListeners) {
+				c.messageListeners = c.messageListeners[:index-1]
+			} else {
+				c.messageListeners = append(c.messageListeners[:index], c.messageListeners[index+1:]...)
+			}
+		}
+	}
+}
 
-    public removeMessageListener(listener: MessageCallback): void {
-        for (let index = this._messageListeners.length - 1; index >= 0; index--) {
-            if (this._messageListeners[index] == listener)
-                this._messageListeners = this._messageListeners.splice(index, 1);
-        }
-    }
+func (c *ResultsManager) NotifyMessage(message string) {
+	for index := 0; index < len(c.messageListeners); index++ {
+		listener := c.messageListeners[index]
+		(*listener)(message)
+	}
+}
 
-    public notifyMessage(message: string): void {
-        for (let index = 0; index < this._messageListeners.length; index++) {
-            try {
-                let listener = this._messageListeners[index];
-                listener(message);
-            } catch (ex) {
-                // Ignore and send a message to the next listener.
-            }
-        }
-    }
+func (c *ResultsManager) AddErrorListener(listener *ErrorCallback) {
+	c.errorListeners = append(c.errorListeners, listener)
+}
 
-    public addErrorListener(listener: ErrorCallback): void {
-        this._errorListeners.push(listener);
-    }
+func (c *ResultsManager) RemoveErrorListener(listener *ErrorCallback) {
+	for index := len(c.errorListeners) - 1; index >= 0; index-- {
+		if c.errorListeners[index] == listener {
+			if index == len(c.errorListeners) {
+				c.errorListeners = c.errorListeners[:index-1]
+			} else {
+				c.errorListeners = append(c.errorListeners[:index], c.errorListeners[index+1:]...)
+			}
+		}
+	}
+}
 
-    public removeErrorListener(listener: ErrorCallback): void {
-        for (let index = this._errorListeners.length - 1; index >= 0; index--) {
-            if (this._errorListeners[index] == listener)
-                this._errorListeners = this._errorListeners.splice(index, 1);
-        }
-    }
-
-    public notifyError(error: any): void {
-        for (let index = 0; index < this._errorListeners.length; index++) {
-            try {
-                let listener = this._errorListeners[index];
-                listener(error);
-            } catch (ex) {
-                // Ignore and send an error to the next listener.
-            }
-        }
-    }
+func (c *ResultsManager) NotifyError(err error) {
+	for index := 0; index < len(c.errorListeners); index++ {
+		listener := c.errorListeners[index]
+		(*listener)(err)
+	}
 }

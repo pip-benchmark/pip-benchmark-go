@@ -1,1 +1,3 @@
-export type ErrorCallback = (error: any) => void;
+package results
+
+type ErrorCallback func(err error)

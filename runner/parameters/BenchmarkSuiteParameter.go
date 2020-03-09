@@ -1,22 +1,31 @@
-var util = require('util');
+package parameters
 
-import { Parameter } from '../../Parameter';
-import { BenchmarkSuiteInstance } from '../benchmarks/BenchmarkSuiteInstance';
+import (
+	"fmt"
 
-export class BenchmarkSuiteParameter extends Parameter {
-    private _originalParameter: Parameter;
+	bench "github.com/pip-benchmark/pip-benchmark-go/benchmark"
+	benchmarks "github.com/pip-benchmark/pip-benchmark-go/runner/benchmarks"
+)
 
-    public constructor(suite: BenchmarkSuiteInstance, originalParameter: Parameter) {
-        super(util.format("%s.%s", suite.name, originalParameter.name),
-          originalParameter.description, originalParameter.defaultValue);
-        this._originalParameter = originalParameter;
-    }
+type BenchmarkSuiteParameter struct {
+	*bench.Parameter
+	originalParameter *bench.Parameter
+}
 
-    public get value(): string {
-        return this._originalParameter.value; 
-    }
-    
-    public set value(value: string) {
-        this._originalParameter.value = value;
-    }
+func NewBenchmarkSuiteParameter(suite *benchmarks.BenchmarkSuiteInstance, originalParameter *bench.Parameter) *BenchmarkSuiteParameter {
+	c := BenchmarkSuiteParameter{}
+
+	c.Parameter = bench.NewParameter(fmt.Sprintf("%s.%s", suite.Name(), originalParameter.Name()),
+		originalParameter.Description(), originalParameter.DefaultValue())
+	c.originalParameter = originalParameter
+
+	return &c
+}
+
+func (c *BenchmarkSuiteParameter) GetValue() string {
+	return c.originalParameter.Value()
+}
+
+func (c *BenchmarkSuiteParameter) SetValue(value string) {
+	c.originalParameter.SetValue(value)
 }

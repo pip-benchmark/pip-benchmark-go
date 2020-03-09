@@ -1,1 +1,3 @@
-export type MessageCallback = (message: string) => void;
+package results
+
+type MessageCallback func(message string)

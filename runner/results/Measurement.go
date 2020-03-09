@@ -1,15 +1,18 @@
-export class Measurement {
+package results
 
-    public constructor(currentValue: number, minValue: number,
-        averageValue: number, maxValue: number) {
-        this.currentValue = currentValue;
-        this.minValue = minValue;
-        this.averageValue = averageValue;
-        this.maxValue = maxValue;
-    }
+type Measurement struct {
+	CurrentValue float64
+	MinValue     float64
+	AverageValue float64
+	MaxValue     float64
+}
 
-    public currentValue: number;
-    public minValue: number;
-    public averageValue: number;
-    public maxValue;
+func NewMeasurement(currentValue float64, minValue float64,
+	averageValue float64, maxValue float64) *Measurement {
+	return &Measurement{
+		CurrentValue: currentValue,
+		MinValue:     minValue,
+		AverageValue: averageValue,
+		MaxValue:     maxValue,
+	}
 }

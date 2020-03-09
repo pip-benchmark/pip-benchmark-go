@@ -1,24 +1,31 @@
-import { Parameter } from '../../Parameter';
-import { Converter } from '../../utilities/Converter';
-import { ConfigurationManager } from '../config/ConfigurationManager';
+package parameters
 
-export class NominalRateParameter extends Parameter {
-    private _configuration: ConfigurationManager;
+import (
+	bench "github.com/pip-benchmark/pip-benchmark-go/benchmark"
+	benchconf "github.com/pip-benchmark/pip-benchmark-go/runner/config"
+	benchconv "github.com/pip-benchmark/pip-benchmark-go/utilities"
+)
 
-    public constructor(configuration: ConfigurationManager) {
-        super(
-            "General.Benchmarking.NominalRate",
-            "Rate for nominal benchmarking in TPS", 
-            "1"
-        );
-        this._configuration = configuration;
-    }
+type NominalRateParameter struct {
+	*bench.Parameter
+	configuration *benchconf.ConfigurationManager
+}
 
-    public get value(): string {
-        return Converter.doubleToString(this._configuration.nominalRate); 
-    }
-    
-    public set value(value: string) {
-        this._configuration.nominalRate = Converter.stringToDouble(value, 1);
-    }
+func NewNominalRateParameter(configuration *benchconf.ConfigurationManager) *NominalRateParameter {
+	c := NominalRateParameter{}
+	c.Parameter = bench.NewParameter(
+		"General.Benchmarking.NominalRate",
+		"Rate for nominal benchmarking in TPS",
+		"1",
+	)
+	c.configuration = configuration
+	return &c
+}
+
+func (c *NominalRateParameter) GetValue() string {
+	return benchconv.Converter.DoubleToString(c.configuration.GetNominalRate())
+}
+
+func (c *NominalRateParameter) SetValue(value string) {
+	c.configuration.SetNominalRate(benchconv.Converter.StringToDouble(value, 1.0))
 }

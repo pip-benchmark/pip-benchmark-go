@@ -1,3 +1,3 @@
-import { ExecutionState } from './ExecutionState';
+package execution
 
-export type ExecutionCallback = (status: ExecutionState) => void;
+type ExecutionCallback func(status ExecutionState)

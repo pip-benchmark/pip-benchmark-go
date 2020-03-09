@@ -1,26 +1,40 @@
-import { Parameter } from '../../Parameter';
-import { MeasurementType } from '../config/MeasurementType';
-import { ConfigurationManager } from '../config/ConfigurationManager';
+package parameters
 
-export class MeasurementTypeParameter extends Parameter {
-    private _configuration: ConfigurationManager;
+import (
+	"strings"
 
-    public constructor(configuration: ConfigurationManager) {
-        super(
-            "General.Benchmarking.MeasurementType",
-            "Performance type: peak or nominal", 
-            "Peak"
-        );
-        this._configuration = configuration;
-    }
+	bench "github.com/pip-benchmark/pip-benchmark-go/benchmark"
+	benchconf "github.com/pip-benchmark/pip-benchmark-go/runner/config"
+)
 
-    public get value(): string {
-         return this._configuration.measurementType == MeasurementType.Peak ? "Peak" : "Nominal"; 
-   }
-    
-    public set value(value: string) {
-        value = value.toLowerCase();
-        this._configuration.measurementType = value.startsWith("p")
-            ? MeasurementType.Peak : MeasurementType.Nominal;
-    }
+type MeasurementTypeParameter struct {
+	*bench.Parameter
+	configuration *benchconf.ConfigurationManager
+}
+
+func NewMeasurementTypeParameter(configuration *benchconf.ConfigurationManager) *MeasurementTypeParameter {
+	c := MeasurementTypeParameter{}
+	c.Parameter = bench.NewParameter(
+		"General.Benchmarking.MeasurementType",
+		"Performance type: peak or nominal",
+		"Peak",
+	)
+	c.configuration = configuration
+	return &c
+}
+
+func (c *MeasurementTypeParameter) GetValue() string {
+	if c.configuration.GetMeasurementType() == benchconf.Peak {
+		return "Peak"
+	}
+	return "Nominal"
+}
+
+func (c *MeasurementTypeParameter) SetValue(value string) {
+	value = strings.ToLower(value)
+	if strings.HasPrefix(value, "p") {
+		c.configuration.SetMeasurementType(benchconf.Peak)
+		return
+	}
+	c.configuration.SetMeasurementType(benchconf.Nominal)
 }

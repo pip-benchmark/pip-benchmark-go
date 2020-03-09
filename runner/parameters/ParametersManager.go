@@ -1,114 +1,117 @@
-let _ = require('lodash');
+package parameters
 
-import { Parameter } from '../../Parameter';
-import { ConfigurationManager } from '../config/ConfigurationManager';
-import { BenchmarkSuiteInstance } from '../benchmarks/BenchmarkSuiteInstance';
-import { BenchmarkInstance } from '../benchmarks/BenchmarkInstance';
-import { MeasurementTypeParameter } from './MeasurementTypeParameter';
-import { NominalRateParameter } from './NominalRateParameter';
-import { ExecutionTypeParameter } from './ExecutionTypeParameter';
-import { DurationParameter } from './DurationParameter';
-import { BenchmarkSelectedParameter } from './BenchmarkSelectedParameter';
-import { BenchmarkProportionParameter } from './BenchmarkProportionParameter';
-import { BenchmarkSuiteParameter } from './BenchmarkSuiteParameter';
-import { Properties } from '../../utilities/Properties';
+import (
+	"strings"
 
-export class ParametersManager {
-    private _configuration: ConfigurationManager;
-    private _parameters: Parameter[] = [];
+	bench "github.com/pip-benchmark/pip-benchmark-go/benchmark"
+	runnerbench "github.com/pip-benchmark/pip-benchmark-go/runner/benchmarks"
+	benchconf "github.com/pip-benchmark/pip-benchmark-go/runner/config"
+	benchutil "github.com/pip-benchmark/pip-benchmark-go/utilities"
+)
 
-    public constructor(configuration: ConfigurationManager) {
-        this._configuration = configuration;
+type ParametersManager struct {
+	configuration *benchconf.ConfigurationManager
+	parameters    []*bench.Parameter
+}
 
-        this._parameters.push(new MeasurementTypeParameter(configuration));
-        this._parameters.push(new NominalRateParameter(configuration));
-        this._parameters.push(new ExecutionTypeParameter(configuration));
-        this._parameters.push(new DurationParameter(configuration));
-    }
- 
-    public get userDefined(): Parameter[] {
-        let parameters: Parameter[] = [];
+func NewParametersManager(configuration *benchconf.ConfigurationManager) *ParametersManager {
+	c := ParametersManager{}
+	c.configuration = configuration
+	c.parameters = make([]*bench.Parameter, 0)
+	c.parameters = append(c.parameters, NewMeasurementTypeParameter(configuration).Parameter)
+	c.parameters = append(c.parameters, NewNominalRateParameter(configuration).Parameter)
+	c.parameters = append(c.parameters, NewExecutionTypeParameter(configuration).Parameter)
+	c.parameters = append(c.parameters, NewDurationParameter(configuration).Parameter)
+	return &c
+}
 
-        for (let parameter of this._parameters) {
-            if (!parameter.name.endsWith(".Selected") 
-                && !parameter.name.endsWith(".Proportion")
-                && !parameter.name.startsWith("General.")) {
-                parameters.push(parameter);
-            }
-        }
+func (c *ParametersManager) UserDefined() []*bench.Parameter {
+	var parameters []*bench.Parameter
 
-        return parameters; 
-    }
+	for _, parameter := range c.parameters {
+		if !strings.HasSuffix(parameter.Name(), ".Selected") &&
+			!strings.HasSuffix(parameter.Name(), ".Proportion") &&
+			!strings.HasPrefix(parameter.Name(), "General.") {
+			parameters = append(parameters, parameter)
+		}
+	}
 
-    public get all(): Parameter[] {
-        return this._parameters;
-    }
+	return parameters
+}
 
-    public loadFromFile(path: string): void {
-        let properties = new Properties();
-        properties.loadFromFile(path);
+func (c *ParametersManager) All() []*bench.Parameter {
+	return c.parameters
+}
 
-        for (let parameter of this._parameters) {
-            if (properties.hasOwnProperty(parameter.name))
-                parameter.value = properties[parameter.name];
-        }
+func (c *ParametersManager) LoadFromFile(path string) {
+	properties := benchutil.Properties{}
+	properties.LoadFromFile(path)
 
-        this._configuration.notifyChanged();
-    }
+	for _, parameter := range c.parameters {
+		prop := properties.GetAsString(parameter.Name(), "")
+		if prop != "" {
+			parameter.SetValue(prop)
+		}
+	}
 
-    public saveToFile(path: string): void {
-        let properties = new Properties();
-        for (let parameter of this._parameters) {
-            properties[parameter.name] = parameter.value;
-        }
-        properties.saveToFile(path);
-    }
+	c.configuration.NotifyChanged()
+}
 
-    public addSuite(suite: BenchmarkSuiteInstance): void {
-       for (let benchmark of suite.benchmarks) {
-            let benchmarkSelectedParameter
-                = new BenchmarkSelectedParameter(benchmark);
-            this._parameters.push(benchmarkSelectedParameter);
+func (c *ParametersManager) SaveToFile(path string) {
+	properties := benchutil.Properties{}
+	for _, parameter := range c.parameters {
+		properties.SetAsString(parameter.Name(), parameter.Value())
+	}
+	properties.SaveToFile(path)
+}
 
-            let benchmarkProportionParameter
-                = new BenchmarkProportionParameter(benchmark);
-            this._parameters.push(benchmarkProportionParameter);
-        }
+func (c *ParametersManager) AddSuite(suite *runnerbench.BenchmarkSuiteInstance) {
+	for _, benchmark := range suite.Benchmarks() {
+		benchmarkSelectedParameter := NewBenchmarkSelectedParameter(benchmark)
+		c.parameters = append(c.parameters, benchmarkSelectedParameter.Parameter)
 
-        for (let parameter of suite.parameters) {
-            let suiteParameter = new BenchmarkSuiteParameter(suite, parameter);
-            this._parameters.push(suiteParameter);
-        }
+		benchmarkProportionParameter := NewBenchmarkProportionParameter(benchmark)
+		c.parameters = append(c.parameters, benchmarkProportionParameter.Parameter)
+	}
 
-        this._configuration.notifyChanged();
-    }
+	for _, parameter := range suite.Parameters() {
+		suiteParameter := NewBenchmarkSuiteParameter(suite, &parameter)
+		c.parameters = append(c.parameters, suiteParameter.Parameter)
+	}
 
-    public removeSuite(suite: BenchmarkSuiteInstance): void {
-        let parameterNamePrefix = suite.name + ".";
+	c.configuration.NotifyChanged()
+}
 
-        this._parameters = _.remove(this._parameters, (parameter) => {
-            return parameter.name.startsWith(parameterNamePrefix);
-        });
+func (c *ParametersManager) RemoveSuite(suite *runnerbench.BenchmarkSuiteInstance) {
+	parameterNamePrefix := suite.Name() + "."
 
-        this._configuration.notifyChanged();
-    }
+	for index, param := range c.parameters {
+		if strings.HasPrefix(param.Name(), parameterNamePrefix) {
+			if index == len(c.parameters) {
+				c.parameters = c.parameters[:index-1]
+			} else {
+				c.parameters = append(c.parameters[:index], c.parameters[index+1:]...)
+			}
+		}
+	}
+	c.configuration.NotifyChanged()
+}
 
-    public setToDefault(): void {
-        for (let parameter of this._parameters) {
-            if (parameter instanceof BenchmarkSuiteParameter)
-                parameter.value = parameter.defaultValue;
-        }
+func (c *ParametersManager) SetToDefault() {
+	for _, parameter := range c.parameters {
+		// TODO: Fix instanceof test
+		//if parameter instanceof BenchmarkSuiteParameter {
+		parameter.SetValue(parameter.DefaultValue())
+		//}
+	}
+	c.configuration.NotifyChanged()
+}
 
-        this._configuration.notifyChanged();
-    }
-
-    public set(parameters: any) {
-        for (let parameter of this._parameters) {
-            if (parameters.hasOwnProperty(parameter.name))
-                parameter.value = parameters[parameter.name];
-        }
-
-        this._configuration.notifyChanged();
-    }
- 
+func (c *ParametersManager) Set(parameters map[string]string) {
+	for _, parameter := range c.parameters {
+		if param, ok := parameters[parameter.Name()]; ok {
+			parameter.SetValue(param)
+		}
+	}
+	c.configuration.NotifyChanged()
 }

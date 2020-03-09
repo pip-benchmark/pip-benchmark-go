@@ -1,27 +1,41 @@
-import { Parameter } from '../../Parameter';
-import { ExecutionType } from '../config/ExecutionType';
-import { ConfigurationManager } from '../config/ConfigurationManager';
+package parameters
 
-export class ExecutionTypeParameter extends Parameter {
-    private _configuration: ConfigurationManager;
+import (
+	"strings"
 
-    public constructor(configuration: ConfigurationManager) {
-        super(
-            "General.Benchmarking.ExecutionType",
-            "Execution type: proportional or sequencial",
-            "Proportional"
-        );
-        this._configuration = configuration;
-    }
+	bench "github.com/pip-benchmark/pip-benchmark-go/benchmark"
+	benchconf "github.com/pip-benchmark/pip-benchmark-go/runner/config"
+)
 
-    public get value(): string {
-        return this._configuration.executionType == ExecutionType.Proportional 
-            ? "Proportional" : "Sequencial"; 
-    }
+type ExecutionTypeParameter struct {
+	*bench.Parameter
+	configuration *benchconf.ConfigurationManager
+}
 
-    public set value(value: string) {
-        value = value.toLowerCase();
-        this._configuration.executionType = value.startsWith("p")
-            ? ExecutionType.Proportional : ExecutionType.Sequential;
-    }
+func NewExecutionTypeParameter(configuration *benchconf.ConfigurationManager) *ExecutionTypeParameter {
+	c := ExecutionTypeParameter{}
+	c.Parameter = bench.NewParameter(
+		"General.Benchmarking.ExecutionType",
+		"Execution type: proportional or sequencial",
+		"Proportional",
+	)
+	c.configuration = configuration
+	return &c
+}
+
+func (c *ExecutionTypeParameter) GetValue() string {
+
+	if c.configuration.GetExecutionType() == benchconf.Proportional {
+		return "Proportional"
+	}
+	return "Sequencial"
+}
+
+func (c *ExecutionTypeParameter) SetValue(value string) {
+	value = strings.ToLower(value)
+	if strings.HasPrefix(value, "p") {
+		c.configuration.SetExecutionType(benchconf.Proportional)
+		return
+	}
+	c.configuration.SetExecutionType(benchconf.Sequential)
 }
