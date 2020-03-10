@@ -37,12 +37,12 @@ func (c *Benchmark) SetContext(value IExecutionContext) {
 	c.Context = value
 }
 
-func (c *Benchmark) SetUp() error {
-	return nil
-}
+// func (c *Benchmark) SetUp() error {
+// 	return nil
+// }
 
 //func (c*Benchmark) abstract execute(callback: (err?: any) => void): void;
 
-func (c *Benchmark) TearDown() error {
-	return nil
-}
+// func (c *Benchmark) TearDown() error {
+// 	return nil
+// }

@@ -21,7 +21,6 @@ type StandardDiskBenchmark struct {
 	fileName string
 	fd       *os.File
 	fileSize int64
-	//buffer   *bytes.Buffer
 }
 
 func NewStandardDiskBenchmark() *StandardDiskBenchmark {
@@ -33,6 +32,7 @@ func NewStandardDiskBenchmark() *StandardDiskBenchmark {
 		fileSizeMax:     102400000,
 		fileSize:        0,
 	}
+	c.Benchmark = benchmark.NewBenchmark("Disk", "Measures disk read and write operations", "StandardDiskBenchmark")
 	c.Benchmark.IExecutable = &c
 	return &c
 }
@@ -57,7 +57,7 @@ func (c *StandardDiskBenchmark) Execute() error {
 	if c.fileSize == 0 || rand.Float32() < 0.5 {
 		var position int64
 
-		if c.fileSize < c.fileSize {
+		if c.fileSize < c.fileSizeMax {
 			position = c.fileSize
 		} else {
 			position = int64(math.Ceil(rand.Float64() * float64(c.fileSize-c.chunkSize)))

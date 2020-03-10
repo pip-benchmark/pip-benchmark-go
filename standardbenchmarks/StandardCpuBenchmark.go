@@ -20,6 +20,14 @@ func NewStandardCpuBenchmark() *StandardCpuBenchmark {
 	return &c
 }
 
+func (c *StandardCpuBenchmark) SetUp() error {
+	return nil
+}
+
+func (c *StandardCpuBenchmark) TearDown() error {
+	return nil
+}
+
 func (c *StandardCpuBenchmark) Execute() error {
 	// Count increment, comparison and goto for 1 arithmetic operation
 	for value := float64(0.0); value < float64(c.numberOfAttempts); value += 1.0 {

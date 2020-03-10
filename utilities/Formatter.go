@@ -36,7 +36,7 @@ func (c *TFormatter) PadRight(value string, length int, padSymbol string) string
 }
 
 func (c *TFormatter) FormatNumber(value float64, decimals int) string {
-	return strconv.FormatFloat(value, 'e', decimals, 64)
+	return strconv.FormatFloat(value, 'f', decimals, 64)
 }
 
 func (c *TFormatter) FormatDate(date time.Time) string {

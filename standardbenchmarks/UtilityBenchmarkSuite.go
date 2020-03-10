@@ -26,8 +26,9 @@ func (c *UtilityBenchmarkSuite) ExecuteEmpty() error {
 }
 
 func (c *UtilityBenchmarkSuite) executeRandomDelay() error {
+	interval := time.Duration(rand.Intn(1000)) * time.Millisecond
 	select {
-	case <-time.After(time.Duration(rand.Intn(1000)) * time.Millisecond):
+	case <-time.After(interval):
 	}
 
 	return nil

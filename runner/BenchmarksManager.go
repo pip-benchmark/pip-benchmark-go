@@ -2,6 +2,7 @@ package runner
 
 import (
 	"path"
+	"plugin"
 	"strings"
 
 	benchmark "github.com/pip-benchmark/pip-benchmark-go/benchmark"
@@ -119,34 +120,42 @@ func (c *BenchmarksManager) AddSuiteFromClass(suiteClassName string) {
 		moduleName = path.Join(moduleName)
 	}
 
-	// TODO: Fix dynamic load suit
+	plug, err := plugin.Open(moduleName)
+	if err != nil {
+		panic("Can't open module " + moduleName + ": " + err.Error())
+	}
 
-	// suite := require(moduleName);
-	// if suite == nil
-	//    panic("Module " + moduleName + " was not found");
+	symModule, err := plug.Lookup(suiteClassName)
+	if err != nil {
+		panic("Module " + moduleName + " was not found")
+	}
 
-	// if (suiteClassName != null && suiteClassName.length > 0)
-	//     suite = suite[suiteClassName];
-
-	// if (_.isFunction(suite)) {
-	//     suite = new suite();
-	//     c.addSuite(suite);
-	// }
+	c.AddSuite(symModule)
 }
 
-// TODO: Fix dynamic load suit
 func (c *BenchmarksManager) AddSuite(suite interface{}) {
-	//     if (suite instanceof BenchmarkSuite)
-	//         suite = new BenchmarkSuiteInstance(suite);
-	//     if (!(suite instanceof BenchmarkSuiteInstance))
-	//         throw Error("Incorrect suite type");
+	var localSuite *BenchmarkSuiteInstance = nil
 
-	//     c.suites.push(suite);
-	//     c.parameters.addSuite(suite);
+	if s, ok := suite.(*benchmark.BenchmarkSuite); ok {
+		localSuite = NewBenchmarkSuiteInstance(s)
+	}
+
+	if localSuite == nil {
+		var ok bool
+		localSuite, ok = suite.(*BenchmarkSuiteInstance)
+		if !ok {
+			panic("BenchmarksManager:AddSuite:Incorrect suite type")
+		}
+	}
+
+	c.suites = append(c.suites, localSuite)
+	c.parameters.AddSuite(localSuite)
 }
 
 // TODO: Fix dynamic load suit
 func (c *BenchmarksManager) AddSuitesFromModule(moduleName string) {
+
+	panic("Load from module not implements in Golang")
 	//     if (moduleName.startsWith("."))
 	//         moduleName = path.resolve(moduleName);
 
@@ -205,7 +214,11 @@ func (c *BenchmarksManager) RemoveSuite(suite interface{}) {
 		}
 	}
 	if localSuite == nil {
-		panic("BenchmarksManager:RemoveSuite:Wrong suite type")
+		var ok bool
+		localSuite, ok = suite.(*BenchmarkSuiteInstance)
+		if !ok {
+			panic("BenchmarksManager:RemoveSuite:Wrong suite type")
+		}
 	}
 	c.parameters.RemoveSuite(localSuite)
 	c.RemoveSuiteByName(localSuite.Name())

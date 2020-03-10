@@ -187,7 +187,7 @@ func (c *ProportionalExecutionStrategy) executeBenchmark(benchmark *BenchmarkIns
 
 		// Introduce delay to keep nominal rate
 		if err == nil && c.Configuration.GetMeasurementType() == Nominal {
-			delay := c.ticksPerTransaction - (now.Unix() - c.lastExecutedTime.Unix())
+			delay := c.ticksPerTransaction - (now.UnixNano()-c.lastExecutedTime.UnixNano())/int64(time.Millisecond)
 			c.lastExecutedTime = now
 
 			if delay > 0 {
@@ -215,7 +215,8 @@ func (c *ProportionalExecutionStrategy) execute() error {
 	if duration <= 0 {
 		duration = 365 * 24 * 36000
 	}
-	c.stopTime = time.Unix(time.Now().Unix()+duration*1000, 0)
+
+	c.stopTime = time.Now().Add(time.Duration(duration) * time.Millisecond)
 
 	c.benchmarkCount = len(c.Benchmarks)
 	c.onlyBenchmark = nil
@@ -229,7 +230,7 @@ func (c *ProportionalExecutionStrategy) execute() error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		for c.running && c.lastExecutedTime.Unix() < c.stopTime.Unix() {
+		for c.running && c.lastExecutedTime.UnixNano() < c.stopTime.UnixNano() {
 			benchmark := c.onlyBenchmark
 			if c.onlyBenchmark != nil {
 				benchmark = c.chooseBenchmarkProportionally()

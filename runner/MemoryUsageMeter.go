@@ -1,7 +1,7 @@
 package runner
 
 import (
-	"runtime"
+	mem "github.com/mackerelio/go-osstat/memory"
 )
 
 type MemoryUsageMeter struct {
@@ -16,7 +16,10 @@ func NewMemoryUsageMeter() *MemoryUsageMeter {
 }
 
 func (c *MemoryUsageMeter) PerformMeasurement() float64 {
-	stat := runtime.MemStats{}
-	runtime.ReadMemStats(&stat)
-	return float64((stat.Sys - stat.Frees) / 1024 / 1024)
+	memory, err := mem.Get()
+	if err != nil {
+		return 0.0
+	}
+
+	return float64((memory.Total - memory.Free) / 1024 / 1024)
 }

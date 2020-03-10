@@ -108,15 +108,15 @@ func (c *PropertyFileLine) decodeValue(value string) string {
 
 	value = strings.TrimSpace(value)
 	if strings.HasPrefix(value, "\"") && strings.HasSuffix(value, "\"") {
-		value = value[1 : len(value)-2]
+		value = value[1 : len(value)-1]
 
-		exp := regexp.MustCompile("/\"\"/g")
+		exp := regexp.MustCompile("\"\"")
 		value = exp.ReplaceAllString(value, "\"")
 	}
 	if strings.HasPrefix(value, "'") && strings.HasSuffix(value, "'") {
 		value = value[1 : len(value)-1]
 
-		exp := regexp.MustCompile("/''/g")
+		exp := regexp.MustCompile("''")
 		value = exp.ReplaceAllString(value, "'")
 	}
 	return value

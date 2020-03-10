@@ -1,9 +1,11 @@
 package utilities
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"io/ioutil"
-	"regexp"
+	"os"
 )
 
 type Properties struct {
@@ -13,22 +15,26 @@ type Properties struct {
 
 func (c *Properties) LoadFromFile(file string) {
 
-	content, rdErr := ioutil.ReadFile(file)
-
-	if rdErr != nil {
+	content, opnErr := os.Open(file)
+	if opnErr != nil {
 		panic("Can't read config file:" + file)
 	}
-
-	exp := regexp.MustCompile("/[\r\n]+/g")
-	lines := exp.Split(string(content), -1)
-
+	reader := bufio.NewReader(content)
 	if c.Lines == nil {
 		c.Lines = make([]*PropertyFileLine, 0)
 	}
-
-	for index := 0; index < len(lines); index++ {
-		line := NewPropertyFileLine(lines[index], "", "")
-		c.Lines = append(c.Lines, line)
+	var line []byte = make([]byte, 0)
+	var rdErr error = nil
+	for rdErr != io.EOF {
+		line, _, rdErr = reader.ReadLine()
+		if rdErr != nil && rdErr != io.EOF {
+			break
+		}
+		if string(line) == "" {
+			continue
+		}
+		propLine := NewPropertyFileLine(string(line), "", "")
+		c.Lines = append(c.Lines, propLine)
 	}
 
 	if c.properties == nil {
@@ -58,7 +64,7 @@ func (c *Properties) SaveToFile(file string) {
 
 	content := ""
 	for _, line := range c.Lines {
-		content += fmt.Sprintln(line)
+		content += fmt.Sprintln(line.Line())
 	}
 	ioutil.WriteFile(file, []byte(content), 0755)
 }

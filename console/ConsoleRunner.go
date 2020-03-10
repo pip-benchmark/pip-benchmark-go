@@ -82,9 +82,9 @@ func (c *ConsoleRunner) executeBatchMode() {
 			msrErr := c.runner.Environment().Measure(true, true, false)
 			output := fmt.Sprintf(
 				"CPU: %s, Video: %s, Disk: %s",
-				strconv.FormatFloat(c.runner.Environment().CpuMeasurement(), 'e', 2, 64),
-				strconv.FormatFloat(c.runner.Environment().VideoMeasurement(), 'e', 2, 64),
-				strconv.FormatFloat(c.runner.Environment().DiskMeasurement(), 'e', 2, 64))
+				strconv.FormatFloat(c.runner.Environment().CpuMeasurement(), 'f', 2, 64),
+				strconv.FormatFloat(c.runner.Environment().VideoMeasurement(), 'f', 2, 64),
+				strconv.FormatFloat(c.runner.Environment().DiskMeasurement(), 'f', 2, 64))
 			fmt.Println(output)
 			if msrErr != nil {
 				errGlobal = msrErr

@@ -32,13 +32,13 @@ func (c *TRandomDateTime) NextDate(min *time.Time, max *time.Time) time.Time {
 		min = &tmp
 	}
 
-	diff := max.UnixNano() - min.UnixNano()
+	diff := max.Sub(*min)
 	if diff <= 0 {
 		return *min
 	}
 
-	tm := min.Unix() + RandomInteger.NextInteger(0, diff)
-	date := time.Unix(tm, 0)
+	tm := time.Duration(RandomInteger.NextInteger(0, int64(diff)))
+	date := min.Add(tm)
 
 	return time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, nil)
 }
@@ -56,13 +56,13 @@ func (c *TRandomDateTime) NextDateTime(min *time.Time, max *time.Time) time.Time
 		min = &tmp
 	}
 
-	diff := max.Unix() - min.Unix()
+	diff := max.Sub(*min)
 	if diff <= 0 {
 		return *min
 	}
 
-	tm := min.Unix() + RandomInteger.NextInteger(0, diff)
-	return time.Unix(tm, 0)
+	tm := time.Duration(RandomInteger.NextInteger(0, int64(diff)))
+	return min.Add(tm)
 }
 
 // Updates (drifts) a Date value within specified range defined
@@ -77,6 +77,6 @@ func (c *TRandomDateTime) UpdateDateTime(value time.Time, rng int64) time.Time {
 		return value
 	}
 
-	tm := value.Unix() + RandomInteger.NextInteger(-rng, rng)
-	return time.Unix(tm, 0)
+	tm := time.Duration(RandomInteger.NextInteger(-rng, rng) * int64(time.Millisecond))
+	return value.Add(tm)
 }

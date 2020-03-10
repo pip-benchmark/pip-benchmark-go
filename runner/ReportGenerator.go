@@ -181,10 +181,10 @@ func (c *ReportGenerator) generateSingleResult() string {
 	}
 	output += c.newLine
 
-	startTime := time.Unix(result.StartTime.Unix(), 0)
+	startTime := result.StartTime
 	output += fmt.Sprintf("  Start Time:   %s", util.Formatter.FormatTime(startTime))
 	output += c.newLine
-	endTime := time.Unix(result.StartTime.Unix()+result.ElapsedTime.Milliseconds(), 0)
+	endTime := result.StartTime.Add(result.ElapsedTime)
 	output += fmt.Sprintf("  End Time:     %s", util.Formatter.FormatTime(endTime))
 	output += c.newLine
 	elapsedTime := result.ElapsedTime

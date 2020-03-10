@@ -36,14 +36,14 @@ func (c *TConsoleEventPrinter) OnResultUpdated(result *benchrunner.BenchmarkResu
 	if result != nil {
 		output := fmt.Sprintf("%s Performance: %s %s>%s>%s CPU Load: %s %s>%s>%s Errors: %d",
 			time.Now().Format(time.RFC3339),
-			strconv.FormatFloat(result.PerformanceMeasurement.CurrentValue, 'e', 2, 64),
-			strconv.FormatFloat(result.PerformanceMeasurement.MinValue, 'e', 2, 64),
-			strconv.FormatFloat(result.PerformanceMeasurement.AverageValue, 'e', 2, 64),
-			strconv.FormatFloat(result.PerformanceMeasurement.MaxValue, 'e', 2, 64),
-			strconv.FormatFloat(result.CpuLoadMeasurement.CurrentValue, 'e', 2, 64),
-			strconv.FormatFloat(result.CpuLoadMeasurement.MinValue, 'e', 2, 64),
-			strconv.FormatFloat(result.CpuLoadMeasurement.AverageValue, 'e', 2, 64),
-			strconv.FormatFloat(result.CpuLoadMeasurement.MaxValue, 'e', 2, 64),
+			strconv.FormatFloat(result.PerformanceMeasurement.CurrentValue, 'f', 2, 64),
+			strconv.FormatFloat(result.PerformanceMeasurement.MinValue, 'f', 2, 64),
+			strconv.FormatFloat(result.PerformanceMeasurement.AverageValue, 'f', 2, 64),
+			strconv.FormatFloat(result.PerformanceMeasurement.MaxValue, 'f', 2, 64),
+			strconv.FormatFloat(result.CpuLoadMeasurement.CurrentValue, 'f', 2, 64),
+			strconv.FormatFloat(result.CpuLoadMeasurement.MinValue, 'f', 2, 64),
+			strconv.FormatFloat(result.CpuLoadMeasurement.AverageValue, 'f', 2, 64),
+			strconv.FormatFloat(result.CpuLoadMeasurement.MaxValue, 'f', 2, 64),
 			len(result.Errors),
 		)
 		fmt.Println(output)

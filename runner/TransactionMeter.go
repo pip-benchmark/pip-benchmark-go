@@ -24,7 +24,7 @@ func (c *TransactionMeter) SetTransactionCounter(value int) {
 
 func (c *TransactionMeter) PerformMeasurement() float64 {
 	currentTime := time.Now()
-	durationInMsecs := currentTime.Unix() - c.LastMeasuredTime.Unix()
+	durationInMsecs := (currentTime.UnixNano() - c.LastMeasuredTime.UnixNano()) / int64(time.Millisecond)
 	result := float64(c.transactionCounter) * 1000.0 / float64(durationInMsecs)
 	c.LastMeasuredTime = currentTime
 	c.transactionCounter = 0

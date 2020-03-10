@@ -23,6 +23,7 @@ func (c *CpuLoadMeter) Clear() {
 	c.lastTotalIdle = 0
 	c.lastTotal = 0
 	c.BenchmarkMeter.Clear()
+	c.LastMeasuredTime = time.Time{}
 }
 
 func (c *CpuLoadMeter) PerformMeasurement() float64 {
@@ -34,12 +35,12 @@ func (c *CpuLoadMeter) PerformMeasurement() float64 {
 	// Calculate current values
 	cpus, cpuErr := cpu.Times(true)
 	if cpuErr != nil {
-
+		return 0.0
 	}
 	cpuCount := len(cpus)
 	for index := 0; index < cpuCount; index++ {
 		cpu := cpus[index]
-		currentTotal += cpu.Total() - cpu.Idle
+		currentTotal += cpu.Total()
 		currentTotalIdle += cpu.Idle
 	}
 	currentTotal = currentTotal / (float64)(cpuCount)

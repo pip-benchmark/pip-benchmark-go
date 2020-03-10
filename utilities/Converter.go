@@ -53,7 +53,7 @@ func (c *TConverter) StringToDouble(value string, defaultValue float64) float64 
 }
 
 func (c *TConverter) DoubleToString(value float64) string {
-	return strconv.FormatFloat(value, 'e', 5, 64)
+	return strconv.FormatFloat(value, 'f', 3, 64)
 }
 
 func (c *TConverter) StringToBoolean(value string, defaultValue bool) bool {
