@@ -52,6 +52,8 @@ func (c *EnvironmentManager) Measure(cpu bool, disk bool, video bool) error {
 				}
 				wg.Done()
 			})
+		} else {
+			wg.Done()
 		}
 	}()
 	wg.Wait()
@@ -66,6 +68,8 @@ func (c *EnvironmentManager) Measure(cpu bool, disk bool, video bool) error {
 				}
 				wg.Done()
 			})
+		} else {
+			wg.Done()
 		}
 	}()
 	wg.Wait()
@@ -80,6 +84,8 @@ func (c *EnvironmentManager) Measure(cpu bool, disk bool, video bool) error {
 				}
 				wg.Done()
 			})
+		} else {
+			wg.Done()
 		}
 	}()
 

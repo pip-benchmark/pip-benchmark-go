@@ -33,6 +33,7 @@ func NewDefaultDiskBenchmark() *DefaultDiskBenchmark {
 		fileSizeMax:     102400000,
 		fileSize:        0,
 	}
+	c.Benchmark = benchmark.NewBenchmark("Disk", "Measures disk read and write operations", "DefaultDiskBenchmark")
 	c.Benchmark.IExecutable = &c
 	return &c
 }

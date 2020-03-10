@@ -26,6 +26,7 @@ func NewProportionalExecutionStrategy(configuration *ConfigurationManager, resul
 	c.ticksPerTransaction = 0
 	c.ExecutionStrategy.IExecutionStrategy = &c
 	c.aggregator = NewResultAggregator(results, benchmarks)
+	c.timeout = nil
 	return &c
 }
 
@@ -152,11 +153,13 @@ func (c *ProportionalExecutionStrategy) executeDelay(delay int, callback func(er
 			select {
 			case <-ticker.C:
 				c.lastExecutedTime = time.Now()
+				c.timeout = nil
 				ticker.Stop()
 				callback(nil)
 				return
 			case <-clear:
 				ticker.Stop()
+				c.timeout = nil
 				return
 			}
 		}

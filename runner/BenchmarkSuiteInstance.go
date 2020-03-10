@@ -108,6 +108,7 @@ func (c *BenchmarkSuiteInstance) SetUp(context benchmark.IExecutionContext) erro
 	for _, benchmark := range c.benchmarks {
 		wg.Add(1)
 		go func(item *BenchmarkInstance) {
+			defer wg.Done()
 			if benchmark.IsSelected() {
 				err = benchmark.SetUp(context)
 			}
@@ -131,6 +132,7 @@ func (c *BenchmarkSuiteInstance) TearDown() error {
 	for _, benchmark := range c.benchmarks {
 		wg.Add(1)
 		go func(item *BenchmarkInstance) {
+			defer wg.Done()
 			if benchmark.IsSelected() {
 				err = benchmark.TearDown()
 			}

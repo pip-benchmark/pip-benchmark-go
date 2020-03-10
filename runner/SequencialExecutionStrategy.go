@@ -20,6 +20,7 @@ func NewSequencialExecutionStrategy(configuration *ConfigurationManager, results
 	c.running = false
 	//super(configuration, results, execution, benchmarks);
 	c.ExecutionStrategy = NewExecutionStrategy(configuration, results, execution, benchmarks)
+	c.timeout = nil
 	return &c
 }
 
@@ -85,6 +86,7 @@ func (c *SequencialExecutionStrategy) execute() error {
 			for {
 				select {
 				case <-ticker.C:
+					c.timeout = nil
 					ticker.Stop()
 					err := c.current.Stop()
 					if err != nil {
@@ -92,6 +94,7 @@ func (c *SequencialExecutionStrategy) execute() error {
 						errGlobal = err
 					}
 				case <-c.timeout:
+					c.timeout = nil
 					ticker.Stop()
 
 				}

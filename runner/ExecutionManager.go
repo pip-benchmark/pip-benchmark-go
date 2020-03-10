@@ -60,6 +60,7 @@ func (c *ExecutionManager) Run(benchmarks []*BenchmarkInstance, callback func(er
 			callback(err)
 		}
 	}
+	callback(nil)
 }
 
 func (c *ExecutionManager) Stop() {

@@ -46,7 +46,7 @@ func NewCommandLineArgs(args []string) *CommandLineArgs {
 }
 
 func (c *CommandLineArgs) processArguments(args []string) {
-	for index := 2; index < len(args); index++ {
+	for index := 0; index < len(args); index++ {
 		arg := args[index]
 		moreArgs := index < len(args)-1
 
