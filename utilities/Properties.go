@@ -13,6 +13,13 @@ type Properties struct {
 	properties map[string]string
 }
 
+func NewProperties() *Properties {
+	return &Properties{
+		Lines:      make([]*PropertyFileLine, 0),
+		properties: make(map[string]string, 0),
+	}
+}
+
 func (c *Properties) LoadFromFile(file string) {
 
 	content, opnErr := os.Open(file)
@@ -20,9 +27,9 @@ func (c *Properties) LoadFromFile(file string) {
 		panic("Can't read config file:" + file)
 	}
 	reader := bufio.NewReader(content)
-	if c.Lines == nil {
-		c.Lines = make([]*PropertyFileLine, 0)
-	}
+	// if c.Lines == nil {
+	// 	c.Lines = make([]*PropertyFileLine, 0)
+	// }
 	var line []byte = make([]byte, 0)
 	var rdErr error = nil
 	for rdErr != io.EOF {
@@ -37,9 +44,9 @@ func (c *Properties) LoadFromFile(file string) {
 		c.Lines = append(c.Lines, propLine)
 	}
 
-	if c.properties == nil {
-		c.properties = make(map[string]string, 0)
-	}
+	// if c.properties == nil {
+	// 	c.properties = make(map[string]string, 0)
+	// }
 
 	c.populateItems()
 }
@@ -60,6 +67,10 @@ func (c *Properties) populateItems() {
 }
 
 func (c *Properties) SaveToFile(file string) {
+
+	// if c.properties == nil {
+	// 	return
+	// }
 	c.synchronizeItems()
 
 	content := ""
@@ -111,8 +122,8 @@ func (c *Properties) synchronizeItems() {
 }
 
 func (c *Properties) GetAsString(key string, defaultValue string) string {
-	value := c.properties[key]
-	if value == "" {
+	value, ok := c.properties[key]
+	if !ok || value == "" {
 		return defaultValue
 	}
 	return value
@@ -123,8 +134,8 @@ func (c *Properties) SetAsString(key string, value string) {
 }
 
 func (c *Properties) GetAsInteger(key string, defaultValue int) int {
-	value := c.properties[key]
-	if value == "" {
+	value, ok := c.properties[key]
+	if !ok || value == "" {
 		return defaultValue
 	}
 	return Converter.StringToInteger(value, defaultValue)
@@ -135,8 +146,8 @@ func (c *Properties) SetAsInteger(key string, value int) {
 }
 
 func (c *Properties) GetAsLong(key string, defaultValue int32) int32 {
-	value := c.properties[key]
-	if value == "" {
+	value, ok := c.properties[key]
+	if !ok || value == "" {
 		return defaultValue
 	}
 	return Converter.StringToLong(value, defaultValue)
@@ -147,8 +158,8 @@ func (c *Properties) SetAsLong(key string, value int32) {
 }
 
 func (c *Properties) GetAsDouble(key string, defaultValue float64) float64 {
-	value := c.properties[key]
-	if value == "" {
+	value, ok := c.properties[key]
+	if !ok || value == "" {
 		return defaultValue
 	}
 	return Converter.StringToDouble(value, defaultValue)

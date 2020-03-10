@@ -92,7 +92,7 @@ func (c *EnvironmentManager) Measure(cpu bool, disk bool, video bool) error {
 }
 
 func (c *EnvironmentManager) load() {
-	properties := EnvironmentProperties{}
+	properties := NewEnvironmentProperties()
 	properties.load()
 
 	c.cpuMeasurement = properties.GetAsDouble("CpuMeasurement", 0)
@@ -101,7 +101,7 @@ func (c *EnvironmentManager) load() {
 }
 
 func (c *EnvironmentManager) save() {
-	properties := EnvironmentProperties{}
+	properties := NewEnvironmentProperties()
 
 	properties.SetAsDouble("CpuMeasurement", c.cpuMeasurement)
 	properties.SetAsDouble("VideoMeasurement", c.videoMeasurement)

@@ -42,7 +42,7 @@ func (c *ParametersManager) All() []*bench.Parameter {
 }
 
 func (c *ParametersManager) LoadFromFile(path string) {
-	properties := benchutil.Properties{}
+	properties := benchutil.NewProperties()
 	properties.LoadFromFile(path)
 
 	for _, parameter := range c.parameters {
@@ -56,7 +56,7 @@ func (c *ParametersManager) LoadFromFile(path string) {
 }
 
 func (c *ParametersManager) SaveToFile(path string) {
-	properties := benchutil.Properties{}
+	properties := benchutil.NewProperties()
 	for _, parameter := range c.parameters {
 		properties.SetAsString(parameter.Name(), parameter.Value())
 	}

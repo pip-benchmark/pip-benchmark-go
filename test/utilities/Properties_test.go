@@ -9,7 +9,7 @@ import (
 
 func TestProperties(t *testing.T) {
 	//test load
-	props := benchutil.Properties{}
+	props := benchutil.NewProperties()
 	props.LoadFromFile("../../data/test.properties")
 
 	assert.Equal(t, 4, len(props.Lines))
@@ -18,7 +18,7 @@ func TestProperties(t *testing.T) {
 	assert.Equal(t, `"Value 3"`, props.GetAsString("Key3", ""))
 
 	//test save
-	props = benchutil.Properties{}
+	props = benchutil.NewProperties()
 	props.LoadFromFile("../../data/test.properties")
 	props.SaveToFile("../../data/test_write.properties")
 

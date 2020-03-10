@@ -10,6 +10,12 @@ type EnvironmentProperties struct {
 	*utilities.Properties
 }
 
+func NewEnvironmentProperties() *EnvironmentProperties {
+	return &EnvironmentProperties{
+		Properties: utilities.NewProperties(),
+	}
+}
+
 func (c *EnvironmentProperties) getFilePath() string {
 	return "BenchmarkEnvironment.properties"
 }

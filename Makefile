@@ -1,13 +1,13 @@
 .PHONY: all build clean install uninstall fmt simplify check run test
 
 install:
-	@go install main.go
+	@go install ./app/main.go
 
 run: install
-	@go run main.go
+	@go run ./app/main.go
 
 test:
 	@go test -v ./test/...
 
-plugin:
+plugins:
 	@go build -buildmode=plugin -o ./plugin/standardbenchmarks.so ./plugin/main.go
