@@ -7,3 +7,4 @@
 /DiskBenchmark-*.dat
 /BenchmarkReport.txt
 /BenchmarkEnvironment.properties
+/.vscode
