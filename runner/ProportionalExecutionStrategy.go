@@ -235,7 +235,7 @@ func (c *ProportionalExecutionStrategy) execute() error {
 		defer wg.Done()
 		for c.running && c.lastExecutedTime.UnixNano() < c.stopTime.UnixNano() {
 			benchmark := c.onlyBenchmark
-			if c.onlyBenchmark != nil {
+			if c.onlyBenchmark == nil {
 				benchmark = c.chooseBenchmarkProportionally()
 			}
 			//called := 0

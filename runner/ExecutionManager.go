@@ -54,11 +54,9 @@ func (c *ExecutionManager) Run(benchmarks []*BenchmarkInstance, callback func(er
 
 	// Initialize parameters and start
 	err := c.strategy.Start()
+	c.Stop()
 	if err != nil {
-		c.Stop()
-		if callback != nil {
-			callback(err)
-		}
+		callback(err)
 	}
 	callback(nil)
 }
