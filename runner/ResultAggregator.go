@@ -62,7 +62,7 @@ func (c *ResultAggregator) IncrementCounter(increment int, now time.Time) {
 	c.transactionCounter += increment
 
 	// If it's less then a second then wait
-	measureInterval := time.Duration(now.UnixNano() - c.transactionMeter.LastMeasuredTime.UnixNano())
+	measureInterval := time.Duration(now.UnixNano()-c.transactionMeter.LastMeasuredTime.UnixNano()) / time.Millisecond
 	if measureInterval >= 1000*time.Millisecond && c.result != nil {
 		// Perform measurements
 		c.transactionMeter.SetTransactionCounter(c.transactionCounter)
