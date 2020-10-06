@@ -176,7 +176,7 @@ func (c *ReportGenerator) generateSingleResult() string {
 	if c.configuration.GetMeasurementType() == Peak {
 		output += "  Measurement Type: Peak Performance"
 	} else {
-		output += fmt.Sprintf("  Measurement Type: Nominal Performance at %d tps",
+		output += fmt.Sprintf("  Measurement Type: Nominal Performance at %3.3f tps",
 			c.configuration.GetNominalRate())
 	}
 	output += c.newLine
@@ -256,7 +256,7 @@ func (c *ReportGenerator) generateParameters() string {
 	output += "Parameters:"
 	output += c.newLine
 	for _, parameter := range c.parameters.All() {
-		output += fmt.Sprintf("  %s=%s", parameter.Name(), parameter.Value())
+		output += fmt.Sprintf("  %s=%s", parameter.Name(), parameter.IParameter.GetValue())
 		output += c.newLine
 	}
 	output += c.newLine

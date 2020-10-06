@@ -12,6 +12,7 @@ func NewMemoryUsageMeter() *MemoryUsageMeter {
 	c := MemoryUsageMeter{}
 	c.BenchmarkMeter = NewBenchmarkMeter()
 	c.BenchmarkMeter.IPerfomedMesurement = &c
+	c.Clear()
 	return &c
 }
 

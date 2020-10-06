@@ -19,6 +19,7 @@ func NewDurationParameter(configuration *ConfigurationManager) *DurationParamete
 		"DurationParameter",
 	)
 	c.configuration = configuration
+	c.IParameter = &c
 	return &c
 }
 

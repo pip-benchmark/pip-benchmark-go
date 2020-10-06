@@ -18,6 +18,7 @@ func NewBenchmarkSelectedParameter(benchmark *BenchmarkInstance) *BenchmarkSelec
 		fmt.Sprintf("Selecting benchmark %s in suite %s", benchmark.Name(), benchmark.Suite().Name()),
 		"true", "BenchmarkSelectedParameter")
 	c.benchmark = benchmark
+	c.IParameter = &c
 	return &c
 }
 

@@ -57,16 +57,17 @@ func (c *ExecutionManager) Run(benchmarks []*BenchmarkInstance, callback func(er
 	c.Stop()
 	if err != nil {
 		callback(err)
+	} else {
+		callback(nil)
 	}
-	callback(nil)
 }
 
 func (c *ExecutionManager) Stop() {
-	if c.running {
+	if c.running == true {
 		c.running = false
 
 		if c.strategy != nil {
-			c.strategy.Stop()
+			c.strategy.StopExecution()
 			c.strategy = nil
 		}
 		c.NotifyUpdated(Completed)

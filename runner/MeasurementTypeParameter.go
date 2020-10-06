@@ -20,6 +20,7 @@ func NewMeasurementTypeParameter(configuration *ConfigurationManager) *Measureme
 		"MeasurementTypeParameter",
 	)
 	c.configuration = configuration
+	c.IParameter = &c
 	return &c
 }
 

@@ -58,6 +58,11 @@ func (c *EnvironmentManager) Measure(cpu bool, disk bool, video bool) error {
 	}()
 	wg.Wait()
 
+	if errGlobal != nil {
+		c.Stop()
+		return errGlobal
+	}
+
 	wg.Add(1)
 	go func() {
 		if disk {
@@ -73,6 +78,12 @@ func (c *EnvironmentManager) Measure(cpu bool, disk bool, video bool) error {
 		}
 	}()
 	wg.Wait()
+
+	if errGlobal != nil {
+
+		c.Stop()
+		return errGlobal
+	}
 
 	wg.Add(1)
 	go func() {

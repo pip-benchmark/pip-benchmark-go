@@ -2,6 +2,6 @@ package runner
 
 type IExecutionStrategy interface {
 	Start() error
-	Stop() error
+	StopExecution() error
 	IsStopped() bool
 }

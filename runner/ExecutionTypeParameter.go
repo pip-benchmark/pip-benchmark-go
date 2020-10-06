@@ -20,6 +20,7 @@ func NewExecutionTypeParameter(configuration *ConfigurationManager) *ExecutionTy
 		"ExecutionTypeParameter",
 	)
 	c.configuration = configuration
+	c.IParameter = &c
 	return &c
 }
 

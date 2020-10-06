@@ -1,6 +1,10 @@
 package runner
 
-import "time"
+import (
+	"time"
+
+	benchmark "github.com/pip-benchmark/pip-benchmark-go/benchmark"
+)
 
 //implements IExecutionContext
 type ExecutionContext struct {
@@ -19,7 +23,7 @@ func NewExecutionContext(suite *BenchmarkSuiteInstance,
 	return &c
 }
 
-func (c *ExecutionContext) GetParameters() map[string]interface{} {
+func (c *ExecutionContext) GetParameters() map[string]*benchmark.Parameter {
 	return c.suite.Suite().Parameters()
 }
 
@@ -40,5 +44,5 @@ func (c *ExecutionContext) IsStopped() bool {
 }
 
 func (c *ExecutionContext) Stop() {
-	c.strategy.Stop()
+	c.strategy.StopExecution()
 }

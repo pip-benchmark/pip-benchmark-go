@@ -15,7 +15,7 @@ func NewConsoleBenchmarkBuilder() *ConsoleBenchmarkBuilder {
 	return &c
 }
 
-func (c *ConsoleBenchmarkBuilder) configureWithArgs(args interface{}) *benchrunner.BenchmarkBuilder {
+func (c *ConsoleBenchmarkBuilder) СonfigureWithArgs(args interface{}) *benchrunner.BenchmarkBuilder {
 	var _args *CommandLineArgs
 
 	if _, ok := args.(*CommandLineArgs); ok {

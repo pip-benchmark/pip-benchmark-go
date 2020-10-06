@@ -21,6 +21,7 @@ func NewSequencialExecutionStrategy(configuration *ConfigurationManager, results
 	//super(configuration, results, execution, benchmarks);
 	c.ExecutionStrategy = NewExecutionStrategy(configuration, results, execution, benchmarks)
 	c.timeout = nil
+	c.IExecutionStrategy = &c
 	return &c
 }
 
@@ -39,14 +40,14 @@ func (c *SequencialExecutionStrategy) Start() error {
 	return c.execute()
 }
 
-func (c *SequencialExecutionStrategy) Stop() error {
+func (c *SequencialExecutionStrategy) StopExecution() error {
 	if c.timeout != nil {
 		//clearTimeout(c.timeout);
 		c.timeout <- true
 		c.timeout = nil
 	}
 
-	if c.running {
+	if c.running == true {
 		c.running = false
 
 		if c.Execution != nil {
@@ -54,7 +55,7 @@ func (c *SequencialExecutionStrategy) Stop() error {
 		}
 
 		if c.current != nil {
-			return c.current.Stop()
+			return c.current.StopExecution()
 		} else {
 			return nil
 		}
@@ -79,26 +80,23 @@ func (c *SequencialExecutionStrategy) execute() error {
 			c.current.Start()
 
 			// Wait for specified duration and stop embedded strategy
-
-			ticker := time.NewTicker(time.Duration(c.Configuration.GetDuration()) * time.Second) // ? *1000
+			ticker := time.NewTicker(time.Duration(c.Configuration.GetDuration()) * time.Second)
 			c.timeout = make(chan bool)
 
-			for {
-				select {
-				case <-ticker.C:
-					c.timeout = nil
-					ticker.Stop()
-					err := c.current.Stop()
-					if err != nil {
-						c.current = nil
-						errGlobal = err
-					}
-				case <-c.timeout:
-					c.timeout = nil
-					ticker.Stop()
-
+			select {
+			case <-ticker.C:
+				c.timeout = nil
+				ticker.Stop()
+				err := c.current.StopExecution()
+				if err != nil {
+					c.current = nil
+					errGlobal = err
 				}
+			case <-c.timeout:
+				c.timeout = nil
+				ticker.Stop()
 			}
+
 		}
 		wg.Done()
 	}()
@@ -107,5 +105,5 @@ func (c *SequencialExecutionStrategy) execute() error {
 	if errGlobal != nil {
 		return errGlobal
 	}
-	return c.Stop()
+	return c.StopExecution()
 }

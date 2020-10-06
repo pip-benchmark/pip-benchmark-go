@@ -186,6 +186,7 @@ func (c *BenchmarksManager) RemoveSuiteByName(suiteName string) {
 	for _, s := range c.suites {
 		if s.Name() == suiteName {
 			suite = s
+			break
 		}
 	}
 

@@ -2,14 +2,6 @@ package runner
 
 import "time"
 
-// import { ResultsManager } from '../results/ResultsManager';
-// import { BenchmarkInstance } from '../benchmarks/BenchmarkInstance';
-// import { BenchmarkResult } from '../results/BenchmarkResult';
-
-// import { TransactionMeter } from './TransactionMeter';
-// import { CpuLoadMeter } from './CpuLoadMeter';
-// import { MemoryUsageMeter } from './MemoryUsageMeter';
-
 type ResultAggregator struct {
 	MaxErrorCount int
 
@@ -62,8 +54,8 @@ func (c *ResultAggregator) IncrementCounter(increment int, now time.Time) {
 	c.transactionCounter += increment
 
 	// If it's less then a second then wait
-	measureInterval := time.Duration(now.UnixNano()-c.transactionMeter.LastMeasuredTime.UnixNano()) / time.Millisecond
-	if measureInterval >= 1000*time.Millisecond && c.result != nil {
+	measureInterval := time.Duration(now.UnixNano() - c.transactionMeter.LastMeasuredTime.UnixNano()) // / time.Millisecond
+	if measureInterval >= time.Second && c.result != nil {
 		// Perform measurements
 		c.transactionMeter.SetTransactionCounter(c.transactionCounter)
 		c.transactionCounter = 0

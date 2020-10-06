@@ -11,6 +11,7 @@ func NewTransactionMeter() *TransactionMeter {
 	c := TransactionMeter{}
 	c.BenchmarkMeter = NewBenchmarkMeter()
 	c.BenchmarkMeter.IPerfomedMesurement = &c
+	c.Clear()
 	return &c
 }
 

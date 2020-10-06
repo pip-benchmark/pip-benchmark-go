@@ -5,6 +5,7 @@ import (
 )
 
 type Parameter struct {
+	IParameter
 	name         string
 	description  string
 	defaultValue string
@@ -20,6 +21,7 @@ func NewParameter(name string, description string, defaultValue string, paramTyp
 		value:        defaultValue,
 		paramType:    paramType,
 	}
+	c.IParameter = &c
 	return &c
 }
 

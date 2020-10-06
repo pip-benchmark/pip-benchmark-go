@@ -19,7 +19,7 @@ func NewBenchmarkProportionParameter(benchmark *BenchmarkInstance) *BenchmarkPro
 		fmt.Sprintf("Sets execution proportion for benchmark %s in suite %s", benchmark.Name(), benchmark.Suite().Name()),
 		"100", "BenchmarkProportionParameter")
 	c.benchmark = benchmark
-
+	c.IParameter = &c
 	return &c
 }
 

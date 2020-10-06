@@ -18,7 +18,6 @@ type BenchmarkMeter struct {
 
 func NewBenchmarkMeter() *BenchmarkMeter {
 	c := BenchmarkMeter{}
-	c.Clear()
 	return &c
 }
 
@@ -75,7 +74,7 @@ func (c *BenchmarkMeter) SetAverageValue(value float64) {
 
 func (c *BenchmarkMeter) Clear() {
 	c.LastMeasuredTime = time.Now()
-	//c.currentValue = c.PerformMeasurement()
+	c.currentValue = c.PerformMeasurement()
 	c.currentValue = 0.0
 	c.minValue = math.MaxFloat64
 	c.maxValue = math.SmallestNonzeroFloat64

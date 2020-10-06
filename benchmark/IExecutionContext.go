@@ -1,7 +1,7 @@
 package benchmark
 
 type IExecutionContext interface {
-	//parameters interface{}
+	GetParameters() map[string]*Parameter
 	IncrementCounter(increment int)
 	SendMessage(message string)
 	ReportError(err error)

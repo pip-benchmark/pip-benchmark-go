@@ -17,7 +17,7 @@ func NewEnvironmentProperties() *EnvironmentProperties {
 }
 
 func (c *EnvironmentProperties) getFilePath() string {
-	return "BenchmarkEnvironment.properties"
+	return "./BenchmarkEnvironment.properties"
 }
 
 func (c *EnvironmentProperties) GetCpuBenchmark() float64 {
@@ -46,7 +46,7 @@ func (c *EnvironmentProperties) SetVideoBenchmark(value float64) {
 
 func (c *EnvironmentProperties) load() {
 	_, fileErr := os.Stat(c.getFilePath())
-	if os.IsExist(fileErr) {
+	if fileErr == nil { //os.IsExist(fileErr)
 		c.Properties.LoadFromFile(c.getFilePath())
 	}
 }

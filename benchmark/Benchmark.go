@@ -2,9 +2,9 @@ package benchmark
 
 type Benchmark struct {
 	IExecutable
+	Context       IExecutionContext
 	name          string
 	description   string
-	Context       IExecutionContext
 	benchmarkType string
 }
 

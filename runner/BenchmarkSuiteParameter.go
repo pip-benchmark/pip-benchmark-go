@@ -17,7 +17,7 @@ func NewBenchmarkSuiteParameter(suite *BenchmarkSuiteInstance, originalParameter
 	c.Parameter = bench.NewParameter(fmt.Sprintf("%s.%s", suite.Name(), originalParameter.Name()),
 		originalParameter.Description(), originalParameter.DefaultValue(), "BenchmarkSuiteParameter")
 	c.originalParameter = originalParameter
-
+	c.IParameter = &c
 	return &c
 }
 

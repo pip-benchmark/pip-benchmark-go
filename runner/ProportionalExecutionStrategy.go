@@ -24,7 +24,7 @@ func NewProportionalExecutionStrategy(configuration *ConfigurationManager, resul
 	c.ExecutionStrategy = NewExecutionStrategy(configuration, results, execution, benchmarks)
 	c.running = false
 	c.ticksPerTransaction = 0
-	c.ExecutionStrategy.IExecutionStrategy = &c
+	c.IExecutionStrategy = &c
 	c.aggregator = NewResultAggregator(results, benchmarks)
 	c.timeout = nil
 	return &c
@@ -77,7 +77,7 @@ func (c *ProportionalExecutionStrategy) IsStopped() bool {
 	return !c.running
 }
 
-func (c *ProportionalExecutionStrategy) Stop() error {
+func (c *ProportionalExecutionStrategy) StopExecution() error {
 	// Interrupt any wait
 	if c.timeout != nil {
 		c.timeout <- true
@@ -85,7 +85,7 @@ func (c *ProportionalExecutionStrategy) Stop() error {
 	}
 
 	// Stop and cleanup execution
-	if c.running {
+	if c.running == true {
 		c.running = false
 		c.aggregator.Stop()
 
@@ -149,19 +149,17 @@ func (c *ProportionalExecutionStrategy) executeDelay(delay int, callback func(er
 	clear := make(chan bool)
 
 	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				c.lastExecutedTime = time.Now()
-				c.timeout = nil
-				ticker.Stop()
-				callback(nil)
-				return
-			case <-clear:
-				ticker.Stop()
-				c.timeout = nil
-				return
-			}
+		select {
+		case <-ticker.C:
+			c.lastExecutedTime = time.Now()
+			c.timeout = nil
+			ticker.Stop()
+			callback(nil)
+			return
+		case <-clear:
+			ticker.Stop()
+			c.timeout = nil
+			return
 		}
 	}()
 	c.timeout = clear
@@ -219,7 +217,7 @@ func (c *ProportionalExecutionStrategy) execute() error {
 		duration = 365 * 24 * 36000
 	}
 
-	c.stopTime = time.Now().Add(time.Duration(duration) * time.Millisecond)
+	c.stopTime = time.Now().Add(time.Duration(duration) * time.Second) // time.Milisecon
 
 	c.benchmarkCount = len(c.Benchmarks)
 	c.onlyBenchmark = nil
@@ -255,7 +253,7 @@ func (c *ProportionalExecutionStrategy) execute() error {
 	}()
 	wg.Wait()
 	if errGlobal != nil {
-		return c.Stop()
+		return c.StopExecution()
 	}
 	return nil
 }

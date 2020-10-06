@@ -3,7 +3,7 @@ package benchmark
 type BenchmarkSuite struct {
 	name        string
 	description string
-	parameters  map[string]interface{}
+	parameters  map[string]*Parameter
 	benchmarks  []*Benchmark
 	context     IExecutionContext
 }
@@ -14,7 +14,8 @@ func NewBenchmarkSuite(name string, description string) *BenchmarkSuite {
 		description: description,
 	}
 	c.benchmarks = make([]*Benchmark, 0)
-	c.parameters = make(map[string]interface{}, 0)
+	c.parameters = make(map[string]*Parameter, 0)
+
 	return &c
 }
 
@@ -34,11 +35,11 @@ func (c *BenchmarkSuite) SetContext(value IExecutionContext) {
 	c.context = value
 }
 
-func (c *BenchmarkSuite) Parameters() map[string]interface{} {
+func (c *BenchmarkSuite) Parameters() map[string]*Parameter {
 	return c.parameters
 }
 
-func (c *BenchmarkSuite) AddParameter(parameter Parameter) Parameter {
+func (c *BenchmarkSuite) AddParameter(parameter *Parameter) *Parameter {
 	c.parameters[parameter.name] = parameter
 	return parameter
 }

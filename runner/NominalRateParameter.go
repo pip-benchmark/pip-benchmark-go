@@ -19,6 +19,7 @@ func NewNominalRateParameter(configuration *ConfigurationManager) *NominalRatePa
 		"NominalRateParameter",
 	)
 	c.configuration = configuration
+	c.IParameter = &c
 	return &c
 }
 

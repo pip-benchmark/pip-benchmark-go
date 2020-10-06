@@ -33,15 +33,15 @@ func (c *BenchmarkSuiteInstance) Description() string {
 	return c.suite.Description()
 }
 
-func (c *BenchmarkSuiteInstance) Parameters() []benchmark.Parameter {
-	var result []benchmark.Parameter = make([]benchmark.Parameter, 0)
+func (c *BenchmarkSuiteInstance) Parameters() []*benchmark.Parameter {
+	var result []*benchmark.Parameter = make([]*benchmark.Parameter, 0)
 	parameters := c.suite.Parameters()
 	for prop := range parameters {
 		if parameter, ok := parameters[prop]; ok {
 
-			if param, convOk := parameter.(benchmark.Parameter); convOk {
-				result = append(result, param)
-			}
+			//if param, convOk := parameter.(*benchmark.Parameter); convOk {
+			result = append(result, parameter)
+			//}
 
 		}
 	}
@@ -139,8 +139,8 @@ func (c *BenchmarkSuiteInstance) TearDown() error {
 		}(benchmark)
 	}
 	wg.Wait()
-	if err != nil {
-		c.suite.SetContext(nil)
-	}
+	// if err != nil {
+	c.suite.SetContext(nil)
+	// }
 	return err
 }

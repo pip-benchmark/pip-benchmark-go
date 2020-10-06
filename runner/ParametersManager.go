@@ -73,7 +73,7 @@ func (c *ParametersManager) AddSuite(suite *BenchmarkSuiteInstance) {
 	}
 
 	for _, parameter := range suite.Parameters() {
-		suiteParameter := NewBenchmarkSuiteParameter(suite, &parameter)
+		suiteParameter := NewBenchmarkSuiteParameter(suite, parameter)
 		c.parameters = append(c.parameters, suiteParameter.Parameter)
 	}
 
@@ -98,7 +98,7 @@ func (c *ParametersManager) RemoveSuite(suite *BenchmarkSuiteInstance) {
 func (c *ParametersManager) SetToDefault() {
 	for _, parameter := range c.parameters {
 		if parameter.Type() == "BenchmarkSuiteParameter" {
-			parameter.SetValue(parameter.DefaultValue())
+			parameter.IParameter.SetValue(parameter.DefaultValue())
 		}
 	}
 	c.configuration.NotifyChanged()
@@ -107,7 +107,7 @@ func (c *ParametersManager) SetToDefault() {
 func (c *ParametersManager) Set(parameters map[string]string) {
 	for _, parameter := range c.parameters {
 		if param, ok := parameters[parameter.Name()]; ok {
-			parameter.SetValue(param)
+			parameter.IParameter.SetValue(param)
 		}
 	}
 	c.configuration.NotifyChanged()
