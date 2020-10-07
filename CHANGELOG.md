@@ -1,11 +1,5 @@
 # Portable Benchmarking Framework in Golang Changelog
 
-## <a name="2.0.0"></a> 2.0.0 (2020-03-06)
-
-Complete refactoring of benchmark runner
-
-### Breaking Changes
-* Runner API was completely changed
 
 ## <a name="1.0.0"></a> 1.0.0 (2017-01-28)
 

@@ -15,31 +15,112 @@ In addition to performance benchmarking, it helps in other types of non-function
 
 ## Usage
 
-To run benchmark do the following
-```bash
-node ./benchmark.js -a <path to suite> -b <benchmark name> -p <param>=<value>
+To run benchmark create your benchmark suit like this
+
+```golang
+package main
+
+import (
+	"errors"
+	"time"
+
+	bench "github.com/pip-benchmark/pip-benchmark-go/benchmark"
+	benchconsole "github.com/pip-benchmark/pip-benchmark-go/console"
+	rnd "github.com/pip-services3-go/pip-services3-commons-go/random"
+)
+
+//===============================
+type SampleBenchmark struct {
+	*bench.Benchmark
+	greeting string
+}
+
+func NewSampleBenchmark() *SampleBenchmark {
+    c := SampleBenchmark{}
+    // Create base benchmark and set name with description
+	c.Benchmark = bench.NewBenchmark("SampleBenchmark", "Measures performance of updating", "Type")
+	c.Benchmark.IExecutable = &c
+	c.greeting = "test"
+	return &c
+}
+
+func (c *SampleBenchmark) SetUp() error {
+    // Setup benckmark
+    // This method must be always created
+    // Get params from context
+	c.greeting = c.Context.GetParameters()["Greeting"].GetAsString()
+	return nil
+}
+
+func (c *SampleBenchmark) TearDown() error {
+    // Teardown behckmark
+    // This method must be always created
+	return nil
+}
+
+func (c *SampleBenchmark) Execute() error {
+    // Create testing function
+    // This method must be always created
+	// Randomly generate message or errors
+	if rnd.RandomBoolean.Chance(1, 10) == true {
+		c.Context.SendMessage(c.greeting)
+	} else if rnd.RandomBoolean.Chance(1, 10) == true {
+		c.Context.ReportError(errors.New("Something bad happend..."))
+	}
+	// Just wait and do nothing
+	time.Sleep(10 * time.Millisecond)
+	return nil
+}
+
+//===============================
+type SampleBenchmarkSuite struct {
+	*bench.BenchmarkSuite
+}
+
+func NewSampleBenchmarkSuite() *SampleBenchmarkSuite {
+	c := SampleBenchmarkSuite{}
+    c.BenchmarkSuite = bench.NewBenchmarkSuite("Samples", "Provides sample benchmarks")
+    // Create parameters. They are will accessible in benchmarks from context
+	c.CreateParameter("Greeting", "Greeting message", "Hello world!")
+	c.AddBenchmark(NewSampleBenchmark().Benchmark)
+	return &c
+}
+//===============================
+func main() {
+    // Create benchmark builder and setup it
+	var benchmark = benchconsole.NewConsoleBenchmarkBuilder()
+	benchmark.AddSuite(NewSampleBenchmarkSuite().BenchmarkSuite).
+		ForDuration(5).
+		ForceContinue(true).
+		WithAllBenchmarks()
+    runner := benchmark.Create()
+    // You can change benchmarking params like this
+	runner.Parameters().Set(map[string]string{"General.Benchmarking.MeasurementType": "Nominal"})
+	runner.Parameters().Set(map[string]string{"General.Benchmarking.ExecutionType": "Sequential"})
+    // Run bechmarking
+	runner.Run(func(err error) {
+		if err != nil {
+			print(err.Error())
+		}
+	})
+    // Print results
+	print(runner.Report().Generate())
+}
+
 ```
 
-To show available benchmarks
-```bash
-node ./benchmark.js -a <path to suite> -B
-```
 
-To show available parameters
-```bash
-node ./benchmark.js -a <path to suite> -P
-```
 
 To measure environment (CPU, video, disk)
 ```bash
-node ./benchmark.js -e
+run ./app/main.go -e
 ```
 
-## Installation
 
-TBD...
 
 ## Acknowledgements
 
-This module created and maintained by **Sergey Seroukhov**.
+This module created and maintained by 
+- **Sergey Seroukhov**
+- **Levichev Dmitry**
 
