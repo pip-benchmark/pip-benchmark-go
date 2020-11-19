@@ -1,6 +1,8 @@
 package runner
 
 import (
+	"strconv"
+
 	benchmark "github.com/pip-benchmark/pip-benchmark-go/benchmark"
 )
 
@@ -53,6 +55,12 @@ func (c *BenchmarkBuilder) WithParameter(name string, value string) *BenchmarkBu
 
 func (c *BenchmarkBuilder) WithBenchmark(name string) *BenchmarkBuilder {
 	c.Runner.benchmarks.SelectByName([]string{name})
+	return c
+}
+
+func (c *BenchmarkBuilder) WithProportionalBenchmark(name string, proportion float32) *BenchmarkBuilder {
+	c.Runner.benchmarks.SelectByName([]string{name})
+	c.WithParameter(name+".Proportion", strconv.FormatFloat((float64)(proportion), 'f', 3, 32))
 	return c
 }
 
