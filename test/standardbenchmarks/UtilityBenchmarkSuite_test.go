@@ -12,9 +12,9 @@ func TestUtilityBenchmarkSuite(t *testing.T) {
 	var suite *benchst.UtilityBenchmarkSuite
 
 	suite = benchst.NewUtilityBenchmarkSuite()
-	suite.SetUp()
+	suite.IPrepared.SetUp()
 
-	defer suite.TearDown()
+	defer suite.IPrepared.TearDown()
 
 	//test emptyBenchmark
 	assert.Equal(t, 2, len(suite.Benchmarks()))

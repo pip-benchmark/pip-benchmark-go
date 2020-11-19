@@ -97,7 +97,7 @@ func (c *BenchmarkSuiteInstance) UnselectByName(benchmarkName string) {
 func (c *BenchmarkSuiteInstance) SetUp(context benchmark.IExecutionContext) error {
 	c.suite.SetContext(context)
 
-	setErr := c.suite.SetUp()
+	setErr := c.suite.IPrepared.SetUp()
 	if setErr != nil {
 		return setErr
 	}
@@ -120,7 +120,7 @@ func (c *BenchmarkSuiteInstance) SetUp(context benchmark.IExecutionContext) erro
 
 func (c *BenchmarkSuiteInstance) TearDown() error {
 
-	downErr := c.suite.TearDown()
+	downErr := c.suite.IPrepared.TearDown()
 
 	if downErr != nil {
 		return downErr

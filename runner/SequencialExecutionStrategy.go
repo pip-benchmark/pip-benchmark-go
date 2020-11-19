@@ -75,7 +75,7 @@ func (c *SequencialExecutionStrategy) execute() error {
 				continue
 			}
 
-			c.Results.NotifyMessage("Executing" + benchmark.Name() + " benchmark...")
+			c.Results.NotifyMessage("Executing " + benchmark.Name() + " benchmark...")
 			// Start embedded strategy
 			c.current = NewProportionalExecutionStrategy(c.Configuration, c.Results, nil, []*BenchmarkInstance{benchmark})
 			c.current.Start()

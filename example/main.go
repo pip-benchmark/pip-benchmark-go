@@ -50,9 +50,18 @@ type SampleBenchmarkSuite struct {
 func NewSampleBenchmarkSuite() *SampleBenchmarkSuite {
 	c := SampleBenchmarkSuite{}
 	c.BenchmarkSuite = bench.NewBenchmarkSuite("Samples", "Provides sample benchmarks")
+	c.IPrepared = &c
 	c.CreateParameter("Greeting", "Greeting message", "Hello world!")
 	c.AddBenchmark(NewSampleBenchmark().Benchmark)
 	return &c
+}
+
+func (c *SampleBenchmarkSuite) SetUp() error {
+	return nil
+}
+
+func (c *SampleBenchmarkSuite) TearDown() error {
+	return nil
 }
 
 func main() {
