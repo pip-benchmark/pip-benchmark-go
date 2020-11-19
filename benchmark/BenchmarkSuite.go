@@ -1,6 +1,7 @@
 package benchmark
 
 type BenchmarkSuite struct {
+	IPrepared
 	name        string
 	description string
 	parameters  map[string]*Parameter
@@ -15,7 +16,7 @@ func NewBenchmarkSuite(name string, description string) *BenchmarkSuite {
 	}
 	c.benchmarks = make([]*Benchmark, 0)
 	c.parameters = make(map[string]*Parameter, 0)
-
+	c.IPrepared = &c
 	return &c
 }
 

@@ -1,7 +1,6 @@
 package benchmark
 
 type IExecutable interface {
+	IPrepared
 	Execute() error
-	SetUp() error
-	TearDown() error
 }

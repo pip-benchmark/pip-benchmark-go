@@ -7,7 +7,7 @@ run: install
 	@go run ./app/main.go
 
 test:
-	@go test -v ./test/...
+	@go clean -testcache && go test -v ./test/...
 
 plugins:
 	@go build -buildmode=plugin -o ./plugin/standardbenchmarks.so ./plugin/main.go
