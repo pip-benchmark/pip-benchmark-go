@@ -109,22 +109,17 @@ func (c *BenchmarkSuiteInstance) SetUp(context benchmark.IExecutionContext) erro
 		wg.Add(1)
 		go func(item *BenchmarkInstance) {
 			defer wg.Done()
-			if benchmark.IsSelected() {
-				err = benchmark.SetUp(context)
+			if item.IsSelected() {
+				err = item.SetUp(context)
 			}
 		}(benchmark)
+		wg.Wait()
 	}
-	wg.Wait()
+
 	return err
 }
 
 func (c *BenchmarkSuiteInstance) TearDown() error {
-
-	downErr := c.suite.IPrepared.TearDown()
-
-	if downErr != nil {
-		return downErr
-	}
 
 	var err error
 	var wg sync.WaitGroup = sync.WaitGroup{}
@@ -133,14 +128,19 @@ func (c *BenchmarkSuiteInstance) TearDown() error {
 		wg.Add(1)
 		go func(item *BenchmarkInstance) {
 			defer wg.Done()
-			if benchmark.IsSelected() {
-				err = benchmark.TearDown()
+			if item.IsSelected() {
+				err = item.TearDown()
 			}
 		}(benchmark)
+		wg.Wait()
 	}
-	wg.Wait()
-	// if err != nil {
+
+	if err != nil {
+		c.suite.SetContext(nil)
+		return err
+	}
+
+	err = c.suite.IPrepared.TearDown()
 	c.suite.SetContext(nil)
-	// }
 	return err
 }

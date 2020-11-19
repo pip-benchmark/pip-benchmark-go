@@ -91,7 +91,6 @@ func (c *BenchmarkInstance) SetUp(context benchmark.IExecutionContext) error {
 func (c *BenchmarkInstance) Execute() error {
 
 	return c.benchmark.Execute()
-
 }
 
 func (c *BenchmarkInstance) TearDown() error {
