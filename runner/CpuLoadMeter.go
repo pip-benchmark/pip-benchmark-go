@@ -16,7 +16,7 @@ func NewCpuLoadMeter() *CpuLoadMeter {
 	c := CpuLoadMeter{}
 	c.BenchmarkMeter = NewBenchmarkMeter()
 	c.BenchmarkMeter.IPerfomedMesurement = &c
-	c.Clear();
+	c.Clear()
 	return &c
 }
 
@@ -24,7 +24,6 @@ func (c *CpuLoadMeter) Clear() {
 	c.lastTotalIdle = 0
 	c.lastTotal = 0
 	c.BenchmarkMeter.Clear()
-	c.LastMeasuredTime = time.Time{}
 }
 
 func (c *CpuLoadMeter) PerformMeasurement() float64 {
