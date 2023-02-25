@@ -6,10 +6,10 @@ require (
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/adam-lavrik/go-imath v0.0.0-20200104135348-19d2b923d06c
 	github.com/go-ole/go-ole v1.2.4 // indirect
+	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mackerelio/go-osstat v0.1.0
 	github.com/pip-services3-go/pip-services3-commons-go v1.0.1
 	github.com/shirou/gopsutil v2.20.9+incompatible
 	github.com/stretchr/testify v1.4.0
-	golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f // indirect
-	honnef.co/go/tools v0.0.1-2020.1.3 // indirect
+	golang.org/x/sys v0.1.0 // indirect
 )
